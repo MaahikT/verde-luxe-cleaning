@@ -23,7 +23,7 @@ interface UpcomingJob {
   clientId: number;
   cleanerId: number | null;
   serviceType: string;
-  scheduledDate: string;
+  scheduledDate: string | Date;
   scheduledTime: string;
   address: string;
   client: BookingClient;
@@ -36,8 +36,8 @@ interface UpcomingJobsCardProps {
 }
 
 export function UpcomingJobsCard({ jobs, onJobClick }: UpcomingJobsCardProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateInput: string | Date) => {
+    const date = new Date(dateInput);
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);

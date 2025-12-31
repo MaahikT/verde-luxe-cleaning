@@ -6,9 +6,10 @@ import { db } from "~/server/db";
 import { baseProcedure } from "~/server/trpc/main";
 import { env } from "~/server/env";
 import { hasPermission } from "~/server/trpc/utils/permission-utils";
+import { generateFutureBookings } from "~/server/utils/recurrence";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2025-12-15.clover",
 });
 
 export const updateBookingAdmin = baseProcedure
@@ -336,6 +337,14 @@ export const updateBookingAdmin = baseProcedure
             },
           });
         }
+      }
+
+      // Generate recurring bookings if frequency is changed to a recurring type
+      if (input.serviceFrequency && ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(input.serviceFrequency)) {
+         // Run in background
+         generateFutureBookings(booking, input.serviceFrequency).catch(err => {
+             console.error("Error generating recurring bookings on update:", err);
+         });
       }
 
       return { booking };

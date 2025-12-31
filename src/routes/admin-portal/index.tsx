@@ -4,7 +4,7 @@ import { useTRPC } from "~/trpc/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "~/stores/authStore";
 import { PortalLayout } from "~/components/PortalLayout";
-import { AdminCalendarView } from "~/components/AdminCalendarView";
+import { AdminCalendarView, type Booking } from "~/components/AdminCalendarView";
 import { AdminBookingForm } from "~/components/AdminBookingForm";
 import { AdminUserForm } from "~/components/AdminUserForm";
 import { AdminChecklistManagement } from "~/components/AdminChecklistManagement";
@@ -82,56 +82,7 @@ export const Route = createFileRoute("/admin-portal/")({
   validateSearch: zodValidator(adminPortalSearchSchema),
 });
 
-interface Booking {
-  id: number;
-  clientId: number;
-  cleanerId: number | null;
-  serviceType: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  durationHours: number | null;
-  address: string;
-  specialInstructions: string | null;
-  finalPrice: number | null;
-  serviceFrequency: string | null;
-  houseSquareFootage: number | null;
-  basementSquareFootage: number | null;
-  numberOfBedrooms: number | null;
-  numberOfBathrooms: number | null;
-  numberOfCleanersRequested: number | null;
-  cleanerPaymentAmount: number | null;
-  paymentMethod: string | null;
-  paymentDetails: string | null;
-  status?: string;
-  client: {
-    id: number;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-    phone: string | null;
-  };
-  cleaner: {
-    id: number;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-    phone: string | null;
-    color: string | null;
-  } | null;
-  checklist?: {
-    id: number;
-    items: {
-      id: number;
-      isCompleted: boolean;
-      completedAt: Date | null;
-      completedBy: number | null;
-    }[];
-    template: {
-      name: string;
-      serviceType: string;
-    };
-  } | null;
-}
+
 
 interface BookingChecklistModalProps {
   checklist: any;
@@ -989,7 +940,7 @@ function AdminPortalPage() {
 
           {/* Calendar View */}
           {activeView === "bookings-calendar" && (
-            <div className="relative">
+            <div className="relative h-[calc(100vh-7rem)]">
               {bookingsQuery.isLoading ? (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                   <div className="flex flex-col items-center gap-4">

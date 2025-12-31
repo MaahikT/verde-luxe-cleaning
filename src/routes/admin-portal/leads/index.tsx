@@ -88,6 +88,10 @@ function LeadsPage() {
       onSuccess: () => {
         toast.success("Lead saved successfully!");
         setShowBookingForm(false);
+        // Reset filters so the new lead is visible
+        navigate({
+          search: (prev) => ({ ...prev, status: "ALL", search: "" }),
+        });
         queryClient.invalidateQueries({ queryKey: trpc.getAllLeadsAdmin.queryKey() });
       },
       onError: (error) => {
@@ -429,6 +433,10 @@ function LeadsPage() {
                       paymentMethod: "NEW_CREDIT_CARD",
                       paymentDetails: null,
                       selectedExtras: null,
+                      clientEmail: selectedLead.email,
+                      clientFirstName: selectedLead.firstName,
+                      clientLastName: selectedLead.lastName,
+                      clientPhone: selectedLead.phone,
                     };
 
                     // Try to parse booking details from message

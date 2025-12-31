@@ -1,0 +1,43 @@
+[2025-12-31T03:59:57.279Z] [AdminLead] Checking OpenPhone sync for Lead ID: 14
+[2025-12-31T03:59:57.282Z] [AdminLead] Linked User ID: 31, Existing OpenPhone ID: 69535ed9f8c3c887b93453b9
+[2025-12-31T03:59:57.283Z] [AdminLead] Use existing OpenPhone ID: 69535ed9f8c3c887b93453b9
+[2025-12-31T04:01:24.548Z] [AdminLead] Checking OpenPhone sync for Lead ID: 15
+[2025-12-31T04:01:24.549Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2025-12-31T04:01:24.550Z] [OpenPhone] Attempting to create contact. Name: Jon Sytek, Phone: +11323242433 (Original: 1323242433)
+[2025-12-31T04:01:24.860Z] [OpenPhone] Search returned 10 results, but none matched +11323242433 exactly.
+[2025-12-31T04:01:25.076Z] [OpenPhone] Response Status: 201
+[2025-12-31T04:01:25.076Z] [OpenPhone] Success! Contact ID: 6954a015b12f3c5fdf736725
+[2025-12-31T04:01:25.077Z] [AdminLead] OpenPhone Service returned ID: 6954a015b12f3c5fdf736725
+[2025-12-31T04:01:25.081Z] [AdminLead] Updated Lead with OpenPhone ID.
+[2025-12-31T04:10:01.215Z] [AdminLead] Checking OpenPhone sync for Lead ID: 16
+[2025-12-31T04:10:01.217Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2025-12-31T04:10:01.218Z] [OpenPhone] Attempting to create contact. Name: Jon Do, Phone: +12323454982 (Original: 2323454982)
+[2025-12-31T04:10:01.513Z] [OpenPhone] Search returned 10 results, but none matched +12323454982 exactly.
+[2025-12-31T04:10:01.806Z] [OpenPhone] Response Status: 201
+[2025-12-31T04:10:01.807Z] [OpenPhone] Success! Contact ID: 6954a219b12f3c5fdf736f6b
+[2025-12-31T04:10:01.808Z] [AdminLead] OpenPhone Service returned ID: 6954a219b12f3c5fdf736f6b
+[2025-12-31T04:10:01.814Z] [AdminLead] Updated Lead with OpenPhone ID.
+[2025-12-31T04:11:23.527Z] [AdminLead] Checking OpenPhone sync for Lead ID: 17
+[2025-12-31T04:11:23.528Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2025-12-31T04:11:23.528Z] [OpenPhone] Attempting to create contact. Name: Jon Do, Phone: +12432020293 (Original: 2432020293)
+[2025-12-31T04:11:23.794Z] [OpenPhone] Search returned 10 results, but none matched +12432020293 exactly.
+[2025-12-31T04:11:24.136Z] [OpenPhone] Response Status: 201
+[2025-12-31T04:11:24.137Z] [OpenPhone] Success! Contact ID: 6954a26ce30173a8eb29d17c
+[2025-12-31T04:11:24.137Z] [AdminLead] OpenPhone Service returned ID: 6954a26ce30173a8eb29d17c
+[2025-12-31T04:11:24.152Z] [AdminLead] Updated Lead with OpenPhone ID.
+[2025-12-31T05:12:01.129Z] [AdminBookingStart] Mutation started. ClientId: 32
+[2025-12-31T05:12:01.158Z] [AdminBooking] Checking OpenPhone sync for Client ID: 32
+[2025-12-31T05:12:01.159Z] [AdminBooking] Client found: tmahik@gmail.com, Phone: 2323454982, existingID: null
+[2025-12-31T05:12:01.159Z] [AdminBooking] Initiating OpenPhone Contact Creation...
+[2025-12-31T05:12:01.160Z] [OpenPhone] Attempting to create contact. Name: Jon Do, Phone: +12323454982 (Original: 2323454982)
+[2025-12-31T05:12:01.478Z] [OpenPhone] Found existing contact via search. ID: 6954a219b12f3c5fdf736f6b
+[2025-12-31T05:12:01.479Z] [AdminBooking] OpenPhone Service returned ID: 6954a219b12f3c5fdf736f6b
+[2025-12-31T05:12:01.487Z] [AdminBooking] User updated with OpenPhone ID.
+[2025-12-31T05:22:59.844Z] [AdminBookingStart] Mutation started. ClientId: 31
+[2025-12-31T05:22:59.879Z] [AdminBooking] Checking OpenPhone sync for Client ID: 31
+[2025-12-31T05:22:59.880Z] [AdminBooking] Client found: test.booking.implicit.1324@example.com, Phone: 5555551324, existingID: 69535ed9f8c3c887b93453b9
+[2025-12-31T05:22:59.881Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T05:25:14.301Z] [AdminBookingStart] Mutation started. ClientId: 32
+[2025-12-31T05:25:14.333Z] [AdminBooking] Checking OpenPhone sync for Client ID: 32
+[2025-12-31T05:25:14.335Z] [AdminBooking] Client found: tmahik@gmail.com, Phone: 2323454982, existingID: 6954a219b12f3c5fdf736f6b
+[2025-12-31T05:25:14.335Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.

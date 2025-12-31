@@ -87,6 +87,10 @@ interface Booking {
   paymentMethod: string | null;
   paymentDetails: string | null;
   selectedExtras?: string | null;
+  clientEmail?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
+  clientPhone?: string;
 }
 
 interface AdminBookingFormProps {
@@ -363,10 +367,18 @@ function AdminBookingFormInner({
 }: AdminBookingFormProps) {
   const trpc = useTRPC();
   const { token } = useAuthStore();
-  const [isNewClient, setIsNewClient] = useState(false);
-  const [selectedExtras, setSelectedExtras] = useState<number[]>(
-    booking?.selectedExtras ? (JSON.parse(booking.selectedExtras as any) as number[]) : []
+  const [isNewClient, setIsNewClient] = useState(
+    booking && !booking.clientId ? true : false
   );
+  const [selectedExtras, setSelectedExtras] = useState<number[]>(() => {
+    if (!booking?.selectedExtras) return [];
+    try {
+      return JSON.parse(booking.selectedExtras as any) as number[];
+    } catch (e) {
+      console.error("Failed to parse selectedExtras:", e);
+      return [];
+    }
+  });
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const [overrideConflict, setOverrideConflict] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"NEW_CREDIT_CARD" | "SAVED_CARD" | "CASH">(
@@ -389,7 +401,11 @@ function AdminBookingFormInner({
     resolver: zodResolver(bookingSchema),
     defaultValues: booking
       ? {
-          clientId: booking.clientId,
+          clientId: booking.clientId || undefined,
+          clientEmail: booking.clientEmail,
+          clientFirstName: booking.clientFirstName,
+          clientLastName: booking.clientLastName,
+          clientPhone: booking.clientPhone,
           cleanerId: booking.cleanerId,
           serviceType: booking.serviceType,
           scheduledDate: new Date(booking.scheduledDate).toISOString().split("T")[0],
@@ -408,7 +424,15 @@ function AdminBookingFormInner({
           cleanerPaymentAmount: booking.cleanerPaymentAmount || undefined,
           paymentMethod: (booking.paymentMethod === "CASH" ? "CASH" : "NEW_CREDIT_CARD") as any,
           paymentDetails: booking.paymentDetails || "",
-          selectedExtras: booking.selectedExtras ? JSON.parse(booking.selectedExtras) : [],
+          selectedExtras: (() => {
+            if (!booking.selectedExtras) return [];
+            try {
+              return JSON.parse(booking.selectedExtras);
+            } catch (e) {
+              console.error("Failed to parse selectedExtras:", e);
+              return [];
+            }
+          })(),
         }
       : {
           paymentMethod: "NEW_CREDIT_CARD" as any,
@@ -656,7 +680,7 @@ function AdminBookingFormInner({
                       {...register("clientId", {
                         setValueAs: (v) => (v === "" ? undefined : Number(v)),
                       })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                      className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     >
                       <option value="">Select a client</option>
                       {clients.map((client) => (
@@ -680,7 +704,7 @@ function AdminBookingFormInner({
                       <input
                         type="email"
                         {...register("clientEmail")}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                         placeholder="client@example.com"
                       />
                       {errors.clientEmail && (
@@ -699,7 +723,7 @@ function AdminBookingFormInner({
                       <input
                         type="text"
                         {...register("clientFirstName")}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                         placeholder="John"
                       />
                     </div>
@@ -710,7 +734,7 @@ function AdminBookingFormInner({
                       <input
                         type="text"
                         {...register("clientLastName")}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                         placeholder="Doe"
                       />
                     </div>
@@ -721,7 +745,7 @@ function AdminBookingFormInner({
                       <input
                         type="tel"
                         {...register("clientPhone")}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                         placeholder="(555) 123-4567"
                       />
                     </div>
@@ -746,7 +770,7 @@ function AdminBookingFormInner({
                   </label>
                   <select
                     {...register("serviceType")}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                   >
                     <option value="">Select a service</option>
                     {serviceTypes.map((type) => (
@@ -768,7 +792,7 @@ function AdminBookingFormInner({
                   </label>
                   <select
                     {...register("serviceFrequency")}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                   >
                     <option value="">Select frequency (optional)</option>
                     <option value="ONE_TIME">One-Time</option>
@@ -793,7 +817,7 @@ function AdminBookingFormInner({
                       {...register("cleanerId", {
                         setValueAs: (v) => (v === "" ? null : Number(v)),
                       })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                      className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     >
                       <option value="">Unassigned</option>
                       {cleaners.map((cleaner) => (
@@ -808,7 +832,7 @@ function AdminBookingFormInner({
                         {...register("cleanerId", {
                           setValueAs: (v) => (v === "" ? null : Number(v)),
                         })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                       >
                         <option value="">Unassigned</option>
                         {cleanersWithAvailability.map((cleaner) => (
@@ -919,7 +943,7 @@ function AdminBookingFormInner({
                   <input
                     type="time"
                     {...register("scheduledTime")}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                   />
                   {errors.scheduledTime && (
                     <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
@@ -947,7 +971,7 @@ function AdminBookingFormInner({
                   <input
                     type="number"
                     {...register("houseSquareFootage", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="e.g., 2000"
                   />
                 </div>
@@ -959,7 +983,7 @@ function AdminBookingFormInner({
                   <input
                     type="number"
                     {...register("basementSquareFootage", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="e.g., 500"
                   />
                 </div>
@@ -971,7 +995,7 @@ function AdminBookingFormInner({
                   <input
                     type="number"
                     {...register("numberOfBedrooms", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="e.g., 3"
                   />
                 </div>
@@ -983,7 +1007,7 @@ function AdminBookingFormInner({
                   <input
                     type="number"
                     {...register("numberOfBathrooms", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="e.g., 2"
                   />
                 </div>
@@ -995,7 +1019,7 @@ function AdminBookingFormInner({
                   <input
                     type="number"
                     {...register("numberOfCleanersRequested", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="e.g., 2"
                   />
                 </div>
@@ -1008,7 +1032,7 @@ function AdminBookingFormInner({
                     type="number"
                     step="0.01"
                     {...register("cleanerPaymentAmount", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="e.g., 90.00"
                   />
                 </div>
@@ -1187,7 +1211,7 @@ function AdminBookingFormInner({
                           valueAsNumber: true,
                           setValueAs: v => v === "" ? null : Number(v)
                         })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                         placeholder="e.g., 2"
                       />
                       {errors.durationHoursInput && (
@@ -1207,7 +1231,7 @@ function AdminBookingFormInner({
                           valueAsNumber: true,
                           setValueAs: v => v === "" ? null : Number(v)
                         })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                         placeholder="e.g., 30"
                       />
                       {errors.durationMinutesInput && (
@@ -1231,7 +1255,7 @@ function AdminBookingFormInner({
                     type="number"
                     step="0.01"
                     {...register("finalPrice", { valueAsNumber: true })}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="Enter price or use calculated value"
                   />
                   <p className="mt-1.5 text-xs text-gray-500">
@@ -1473,7 +1497,7 @@ function AdminBookingFormInner({
                   <input
                     type="text"
                     {...register("address")}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
                     placeholder="123 Main St, City, State ZIP"
                   />
                   {errors.address && (
@@ -1490,7 +1514,7 @@ function AdminBookingFormInner({
                   <textarea
                     {...register("specialInstructions")}
                     rows={3}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow resize-none"
+                    className="w-full px-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow resize-none"
                     placeholder="Any special instructions for the cleaner..."
                   />
                 </div>

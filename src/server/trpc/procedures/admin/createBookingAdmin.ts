@@ -10,6 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { hasPermission } from "~/server/trpc/utils/permission-utils";
 import { createOpenPhoneContact } from "~/server/services/openphone";
+import { generateFutureBookings } from "~/server/utils/recurrence";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-12-15.clover",
@@ -443,6 +444,14 @@ export const createBookingAdmin = baseProcedure
         try { fs.appendFileSync(LOG_FILE, `[${new Date().toISOString()}] [AdminBooking] Failed to sync with OpenPhone: ${err}\n`); } catch(e) {}
         console.error("[AdminBooking] Failed to sync with OpenPhone:", err);
         // Do not block booking creation
+      }
+
+      // Generate recurring bookings if frequency is set
+      if (input.serviceFrequency && ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(input.serviceFrequency)) {
+        // Run in background to not block response
+        generateFutureBookings(booking, input.serviceFrequency).catch(err => {
+            console.error("Error generating recurring bookings:", err);
+        });
       }
 
       return {
