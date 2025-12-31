@@ -41,3 +41,15 @@
 [2025-12-31T05:25:14.333Z] [AdminBooking] Checking OpenPhone sync for Client ID: 32
 [2025-12-31T05:25:14.335Z] [AdminBooking] Client found: tmahik@gmail.com, Phone: 2323454982, existingID: 6954a219b12f3c5fdf736f6b
 [2025-12-31T05:25:14.335Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T06:59:30.400Z] [AdminBookingStart] Mutation started. ClientId: 27
+[2025-12-31T06:59:30.600Z] [AdminBooking] Checking OpenPhone sync for Client ID: 27
+[2025-12-31T06:59:30.607Z] [AdminBooking] Client found: test.booking.implicit.1612@example.com, Phone: 5555551612, existingID: 6953187e7c6995f3e75147e7
+[2025-12-31T06:59:30.608Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T07:01:08.124Z] [AdminBookingStart] Mutation started. ClientId: 29
+[2025-12-31T07:01:08.321Z] [AdminBooking] Checking OpenPhone sync for Client ID: 29
+[2025-12-31T07:01:08.324Z] [AdminBooking] Client found: test.booking.implicit.7272@example.com, Phone: 5555557272, existingID: 69531a6b0a6aceaaf0ecdab3
+[2025-12-31T07:01:08.325Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T07:07:14.623Z] [AdminBookingStart] Mutation started. ClientId: 29
+[2025-12-31T07:07:14.828Z] [AdminBooking] Checking OpenPhone sync for Client ID: 29
+[2025-12-31T07:07:14.831Z] [AdminBooking] Client found: test.booking.implicit.7272@example.com, Phone: 5555557272, existingID: 69531a6b0a6aceaaf0ecdab3
+[2025-12-31T07:07:14.833Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.

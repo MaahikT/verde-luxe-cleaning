@@ -61,6 +61,7 @@ import { createLeadFromBooking } from "./procedures/admin/createLeadFromBooking"
 import { getMonthlyDashboardMetrics } from "./procedures/admin/getMonthlyDashboardMetrics";
 import { deleteLeadAdmin } from "./procedures/admin/deleteLeadAdmin";
 import { updateLeadAdmin } from "./procedures/admin/updateLeadAdmin";
+import { cancelBookingAdmin } from "./procedures/admin/cancelBookingAdmin";
 
 
 export const appRouter = createTRPCRouter({
@@ -112,6 +113,8 @@ export const appRouter = createTRPCRouter({
   updateLeadStatus,
   createLeadFromBooking,
   updateLeadAdmin, // Added updateLeadAdmin here
+  deleteLeadAdmin,
+  cancelBookingAdmin, // Added cancelBookingAdmin here
   // Checklist procedures
   createChecklistTemplate,
   getChecklistTemplates,

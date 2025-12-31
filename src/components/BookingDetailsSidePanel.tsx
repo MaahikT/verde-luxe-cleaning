@@ -38,6 +38,9 @@ interface Booking {
   } | null;
 }
 
+import { CancellationModal } from "./CancellationModal";
+import { useState } from "react";
+
 interface BookingDetailsSidePanelProps {
   booking: Booking;
   onClose: () => void;
@@ -49,6 +52,8 @@ export function BookingDetailsSidePanel({
   onClose,
   onEdit,
 }: BookingDetailsSidePanelProps) {
+  const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -301,7 +306,7 @@ export function BookingDetailsSidePanel({
           )}
 
           {/* Edit Button - Bottom */}
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col gap-3">
             <button
               onClick={onEdit}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
@@ -309,9 +314,25 @@ export function BookingDetailsSidePanel({
               <Edit className="w-4 h-4" />
               Edit Booking
             </button>
+            <button
+              onClick={() => setIsCancellationModalOpen(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-red-200 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+            >
+              <X className="w-4 h-4" />
+              Cancel Booking
+            </button>
           </div>
         </div>
       </div>
+
+      <CancellationModal
+        isOpen={isCancellationModalOpen}
+        onClose={() => setIsCancellationModalOpen(false)}
+        booking={booking}
+        onSuccess={() => {
+           onClose(); // Close the side panel on successful cancellation
+        }}
+      />
     </>
   );
 }

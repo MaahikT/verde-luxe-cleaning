@@ -395,6 +395,10 @@ model Configuration {
   // the booking is within this many hours of the scheduled date.
   // Null means holds are placed immediately (default behavior).
   paymentHoldDelayHours Int?
+
+  // Cancellation Policy
+  cancellationWindowHours Int     @default(48) // Hours before booking start to charge fee
+  cancellationFeeAmount   Float   @default(50.0) // Fee in dollars
 }
 
 enum EmailRecipientType {

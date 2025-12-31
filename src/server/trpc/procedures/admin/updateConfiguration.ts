@@ -11,6 +11,8 @@ export const updateConfiguration = baseProcedure
     z.object({
       authToken: z.string(),
       paymentHoldDelayHours: z.number().int().positive().nullable(),
+      cancellationWindowHours: z.number().int().min(0).optional(),
+      cancellationFeeAmount: z.number().min(0).optional(),
     })
   )
   .mutation(async ({ input }) => {
@@ -57,6 +59,8 @@ export const updateConfiguration = baseProcedure
           where: { id: existingConfig.id },
           data: {
             paymentHoldDelayHours: input.paymentHoldDelayHours,
+            cancellationWindowHours: input.cancellationWindowHours,
+            cancellationFeeAmount: input.cancellationFeeAmount,
           },
         });
       } else {
@@ -64,6 +68,8 @@ export const updateConfiguration = baseProcedure
         configuration = await db.configuration.create({
           data: {
             paymentHoldDelayHours: input.paymentHoldDelayHours,
+            cancellationWindowHours: input.cancellationWindowHours ?? 48,
+            cancellationFeeAmount: input.cancellationFeeAmount ?? 50.0,
           },
         });
       }

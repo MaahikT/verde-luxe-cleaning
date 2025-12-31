@@ -14,6 +14,7 @@ export interface Booking {
   serviceFrequency: string | null;
   clientId: number;
   cleanerId: number | null;
+  status: string;
   specialInstructions: string | null;
   houseSquareFootage: number | null;
   basementSquareFootage: number | null;
@@ -130,6 +131,9 @@ export function AdminCalendarView({
     const day = date.getDate();
 
     return bookings.filter((booking) => {
+      // Filter out cancelled bookings from calendar view
+      if ((booking as any).status === "CANCELLED") return false;
+
       const bookingDate = new Date(booking.scheduledDate);
       return (
         bookingDate.getFullYear() === year &&

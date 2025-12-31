@@ -54,6 +54,8 @@ export const getConfiguration = baseProcedure
         configuration = await db.configuration.create({
           data: {
             paymentHoldDelayHours: null,
+            cancellationWindowHours: 48,
+            cancellationFeeAmount: 50.0,
           },
         });
       }

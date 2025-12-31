@@ -281,8 +281,8 @@ function AdminBookingFormWithPayment(props: AdminBookingFormProps) {
 
         let paymentIntent = retrievedIntent;
 
-        // Only confirm if the payment intent requires confirmation
-        if (paymentIntent?.status === "requires_confirmation") {
+        // Confirm if the payment intent requires confirmation or additional action (3DS)
+        if (paymentIntent?.status === "requires_confirmation" || paymentIntent?.status === "requires_action") {
           const { error: confirmError, paymentIntent: confirmedIntent } = await stripe.confirmCardPayment(
             paymentIntentResult.clientSecret,
             {
@@ -299,8 +299,7 @@ function AdminBookingFormWithPayment(props: AdminBookingFormProps) {
 
         if (!paymentIntent || !["succeeded", "requires_capture", "processing"].includes(paymentIntent.status)) {
           throw new Error(
-            `Payment authorization failed. Status: ${paymentIntent?.status || "unknown"}. ` +
-            `${paymentIntent?.status === "requires_action" ? "Additional authentication required but not supported in admin flow." : ""}`
+            `Payment authorization failed. Status: ${paymentIntent?.status || "unknown"}.`
           );
         }
 
