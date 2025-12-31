@@ -1,0 +1,430 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  CLEANER
+  ADMIN
+  OWNER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceFrequency {
+  ONE_TIME
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  CASH
+  SAVED_CARD  // Temporary - will be migrated to CREDIT_CARD and removed
+}
+
+enum PricingRuleType {
+  BASE_PRICE           // Base price for a service type
+  SQFT_RATE            // Price per square foot
+  BEDROOM_RATE         // Price per bedroom
+  BATHROOM_RATE        // Price per bathroom
+  EXTRA_SERVICE        // Price for additional services/extras
+  TIME_ESTIMATE        // Time estimation rules
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeadStatus {
+  INCOMING
+  NO_RESPONSE
+  HOT_LEAD
+  PENDING_CALL_BACK
+  OFFER_MADE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  email    String   @unique
+  password String // bcrypt hashed password
+  role     UserRole @default(CLIENT)
+
+  firstName String?
+  lastName  String?
+  phone     String?
+  stripeCustomerId String?  // Stripe Customer ID for payment processing
+  color     String?  // Hex color code for provider (e.g., #FF7F50)
+
+  // Temporary password system for admin-created accounts
+  temporaryPassword  String?  // Plaintext temporary password shown to admin (only set when admin creates user via booking)
+  hasResetPassword   Boolean  @default(false) // True if user has reset their password via "Forgot Password"
+
+  // Admin permissions (for ADMIN and OWNER roles)
+  // Stored as JSON object with permission keys as booleans
+  // Example: { "manage_bookings": true, "manage_customers": false, ... }
+  adminPermissions Json?
+
+  // OpenPhone Integration
+  openPhoneContactId String? // ID of the contact in OpenPhone
+
+  // Relations
+  clientBookings  Booking[] @relation("ClientBookings")
+  cleanerBookings Booking[] @relation("CleanerBookings")
+  payments        Payment[]
+  bookingInquiries BookingInquiry[]
+  timeOffRequests       TimeOffRequest[] @relation("CleanerTimeOffRequests")
+  reviewedTimeOffRequests TimeOffRequest[] @relation("AdminReviewedRequests")
+  savedPaymentMethods SavedPaymentMethod[]
+}
+
+model Booking {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // Client information
+  clientId Int
+  client   User @relation("ClientBookings", fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Cleaner assignment
+  cleanerId Int?
+  cleaner   User? @relation("CleanerBookings", fields: [cleanerId], references: [id], onDelete: SetNull)
+
+  // Booking details
+  serviceType    String
+  scheduledDate  DateTime
+  scheduledTime  String
+  durationHours  Float?
+  address        String
+  specialInstructions String?
+
+  status BookingStatus @default(PENDING)
+
+  // Pricing
+  finalPrice     Float?
+
+  // Selected extra services (stored as JSON array of extra service IDs or names)
+  selectedExtras Json?
+
+  // Additional booking details
+  serviceFrequency       ServiceFrequency?
+  houseSquareFootage     Int?
+  basementSquareFootage  Int?
+  numberOfBedrooms       Int?
+  numberOfBathrooms      Int?
+  numberOfCleanersRequested Int?
+  cleanerPaymentAmount   Float?
+  paymentMethod          PaymentMethod?
+  paymentDetails         String?
+
+  // Relations
+  payments Payment[]
+  checklist BookingChecklist?
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  bookingId Int
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  cleanerId Int?
+  cleaner   User? @relation(fields: [cleanerId], references: [id], onDelete: SetNull)
+
+  amount      Float
+  paidAt      DateTime?
+  description String?
+  stripePaymentIntentId  String?   // Stripe Payment Intent ID
+  stripePaymentMethodId  String?   // Stripe Payment Method ID
+  status                 String?   // Payment status: succeeded, pending, failed, requires_capture
+  isCaptured             Boolean   @default(false)  // Whether payment was captured immediately or authorized only
+}
+
+model SavedPaymentMethod {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  userId    Int
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stripePaymentMethodId String   @unique  // Stripe PaymentMethod ID (pm_xxx)
+  last4                 String            // Last 4 digits of card
+  brand                 String   @default("unknown") // Card brand (visa, mastercard, etc.)
+  expiryMonth           Int               // Expiration month (1-12)
+  expiryYear            Int               // Expiration year (e.g., 2025)
+
+  isDefault             Boolean  @default(false)  // Whether this is the default payment method
+
+  @@index([userId])
+}
+
+model BookingInquiry {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+
+  userId        Int?
+  user          User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  firstName     String?
+  lastName      String?
+  phone         String
+  email         String
+  howHeardAbout String
+  message       String?
+  status        LeadStatus @default(INCOMING)
+
+  // OpenPhone Integration
+  openPhoneContactId String? // ID of the contact in OpenPhone
+}
+
+model ChecklistTemplate {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  name        String
+  serviceType String // e.g., "Standard Home Cleaning", "Deep Home Cleaning", "Move-In/Out Cleaning"
+
+  // Relations
+  items            ChecklistItemTemplate[]
+  bookingChecklists BookingChecklist[]
+}
+
+model ChecklistItemTemplate {
+  id        Int      @id @default(autoincrement())
+
+  templateId  Int
+  template    ChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  description String
+  order       Int     // For display ordering
+}
+
+model BookingChecklist {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  bookingId  Int     @unique
+  booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  templateId Int
+  template   ChecklistTemplate @relation(fields: [templateId], references: [id])
+
+  // Relations
+  items BookingChecklistItem[]
+}
+
+model BookingChecklistItem {
+  id        Int      @id @default(autoincrement())
+
+  checklistId Int
+  checklist   BookingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  description String
+  order       Int
+  isCompleted Boolean  @default(false)
+  completedAt DateTime?
+  completedBy Int?     // User ID of the cleaner who completed it
+}
+
+model PricingRule {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name          String           // Descriptive name for the rule
+  ruleType      PricingRuleType
+  serviceType   String?          // Which service type this applies to (null = all)
+
+  // Pricing values
+  priceAmount   Float?           // Fixed price amount (for BASE_PRICE, EXTRA_SERVICE)
+  ratePerUnit   Float?           // Rate per unit (for SQFT_RATE, BEDROOM_RATE, BATHROOM_RATE)
+
+  // Time estimation (in hours)
+  timeAmount    Float?           // Fixed time amount
+  timePerUnit   Float?           // Time per unit
+
+  // Extra service specific fields
+  extraName     String?          // Name of the extra service
+  extraDescription String?       // Description of the extra service
+
+  isActive      Boolean @default(true)
+  displayOrder  Int     @default(0)
+}
+
+model TimeOffRequest {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cleanerId Int
+  cleaner   User @relation("CleanerTimeOffRequests", fields: [cleanerId], references: [id], onDelete: Cascade)
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+
+  status    RequestStatus @default(PENDING)
+
+  reviewedById Int?
+  reviewedBy   User? @relation("AdminReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  adminNotes   String?
+  isCleared    Boolean  @default(false)
+}
+
+model MercuryAccount {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  lastSyncedAt DateTime?
+
+  mercuryId          String   @unique  // Mercury's account ID
+  name               String             // Account name
+  accountNumber      String?            // Last 4 digits or masked account number
+  routingNumber      String?
+  currentBalance     Float              // Current balance in dollars
+  availableBalance   Float              // Available balance in dollars
+  status             String             // Account status (active, closed, etc.)
+  type               String?            // Account type (checking, savings, etc.)
+
+  // Relations
+  transactions Transaction[]
+}
+
+model TransactionCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  name        String   @unique  // Category name (e.g., "Supplies", "Payroll", "Marketing")
+  description String?
+  color       String?  // Hex color for UI display
+
+  // Relations
+  transactions        Transaction[]
+  categorizationRules CategorizationRule[]
+}
+
+enum TransactionStatus {
+  PENDING
+  POSTED
+  CANCELLED
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  mercuryId          String   @unique  // Mercury's transaction ID
+  accountId          Int
+  account            MercuryAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  date               DateTime         // Transaction date
+  description        String           // Original description from Mercury
+  editedDescription  String?          // User-edited description
+  amount             Float            // Transaction amount (negative for debits, positive for credits)
+  status             TransactionStatus
+
+  categoryId         Int?
+  category           TransactionCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // Additional Mercury data stored as JSON
+  counterpartyName   String?
+  counterpartyId     String?
+  bankDescription    String?          // Original bank description
+  details            Json?            // Additional transaction details from Mercury
+
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([date])
+  @@index([status])
+}
+
+enum RuleConditionType {
+  VENDOR_CONTAINS
+  DESCRIPTION_CONTAINS
+  AMOUNT_EQUALS
+  AMOUNT_GREATER_THAN
+  AMOUNT_LESS_THAN
+  COUNTERPARTY_EQUALS
+}
+
+model CategorizationRule {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  name              String             // Rule name for identification
+  conditionType     RuleConditionType
+  conditionValue    String             // The value to match against
+
+  categoryId        Int
+  category          TransactionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  isActive          Boolean  @default(true)
+  priority          Int      @default(0)  // Higher priority rules are applied first
+
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model Configuration {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Payment hold delay in hours. If set, payment holds will only be placed when
+  // the booking is within this many hours of the scheduled date.
+  // Null means holds are placed immediately (default behavior).
+  paymentHoldDelayHours Int?
+}
+
+enum EmailRecipientType {
+  ADMIN
+  CUSTOMER
+  CLEANER
+}
+
+enum EmailEventCategory {
+  ACCOUNT
+  GENERAL
+  BOOKING_NEW_MODIFIED
+  BOOKING_CANCELED_POSTPONED
+  BOOKING_UNASSIGNED
+  REMINDERS
+}
+
+model EmailTemplate {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  name        String   @unique // System identifier (e.g. "customer_booking_confirmation")
+
+  recipient   EmailRecipientType
+  category    EmailEventCategory
+  event       String   // Specific event ID (e.g. "booking_created")
+
+  subject     String
+  body        String
+  description String?
+  isActive    Boolean  @default(true)
+}

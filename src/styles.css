@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #7d8393;
+    background: #fff;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Roboto Slab", serif;
+    color: #000;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  a {
+    text-decoration: none;
+    outline: 0;
+    transition: all 0.5s ease;
+  }
+}
+
+@layer components {
+  /* Bootstrap Icons in contact info boxes */
+  .cn-list i[class*="bi-"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cn-list i[class*="bi-"]::before {
+    display: inline-block;
+  }
+
+  .cn-social i[class*="bi-"]::before {
+    display: inline-block;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  /* Number input spinner controls - hide by default to prevent overlap */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  /* Show spinners on hover and focus for better usability */
+  input[type="number"]:hover::-webkit-inner-spin-button,
+  input[type="number"]:hover::-webkit-outer-spin-button,
+  input[type="number"]:focus::-webkit-inner-spin-button,
+  input[type="number"]:focus::-webkit-outer-spin-button {
+    -webkit-appearance: auto;
+    opacity: 1;
+  }
+
+  /* Firefox - hide default spinner */
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Firefox - restore spinner on hover and focus */
+  input[type="number"]:hover,
+  input[type="number"]:focus {
+    -moz-appearance: number-input;
+    appearance: auto;
+  }
+
+  /* Hide scrollbar but maintain scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes upDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
