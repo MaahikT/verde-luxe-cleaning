@@ -102,6 +102,7 @@ export const getAllBookingsAdmin = baseProcedure
               email: true,
               phone: true,
               color: true,
+              role: true,
             },
           },
           checklist: {

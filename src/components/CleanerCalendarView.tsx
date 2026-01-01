@@ -1,5 +1,5 @@
 import { Calendar, ChevronLeft, ChevronRight, CheckSquare } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { formatTime12Hour } from "~/utils/formatTime";
 import { BookingTooltip } from "~/components/BookingTooltip";
 
@@ -50,6 +50,17 @@ export function CleanerCalendarView({
   const [tooltipTarget, setTooltipTarget] = useState<HTMLElement | null>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
 
+  // Sync hoveredBooking with latest data when bookings update
+  useEffect(() => {
+    if (hoveredBooking) {
+      const freshBooking = bookings.find(b => b.id === hoveredBooking.id);
+      // Only update if the object reference has changed (implies data update)
+      if (freshBooking && freshBooking !== hoveredBooking) {
+        setHoveredBooking(freshBooking);
+      }
+    }
+  }, [bookings, hoveredBooking]);
+
   const getMonthStart = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1);
   };
@@ -92,7 +103,7 @@ export function CleanerCalendarView({
     const year = date.getFullYear();
     const month = date.getMonth();
     const day = date.getDate();
-    
+
     return bookings.filter((booking) => {
       const bookingDate = new Date(booking.scheduledDate);
       return (
@@ -205,7 +216,7 @@ export function CleanerCalendarView({
                     const completedItems = checklist?.items.filter(item => item.isCompleted).length || 0;
                     const totalItems = checklist?.items.length || 0;
                     const hasChecklist = checklist && totalItems > 0;
-                    
+
                     return (
                       <div key={booking.id} className="relative">
                         <div

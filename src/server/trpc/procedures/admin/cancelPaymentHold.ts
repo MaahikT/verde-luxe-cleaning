@@ -8,7 +8,7 @@ import { env } from "~/server/env";
 import { hasPermission } from "~/server/trpc/utils/permission-utils";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2025-12-15.clover",
 });
 
 export const cancelPaymentHold = baseProcedure

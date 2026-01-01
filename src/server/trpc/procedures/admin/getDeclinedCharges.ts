@@ -82,12 +82,15 @@ export const getDeclinedCharges = baseProcedure
         };
       }
 
+      if (Object.keys(bookingSearchWhere).length > 0) {
+         paymentWhere.AND.push({ booking: bookingSearchWhere });
+      }
+
       // Fetch payments with declined/failed status
       const payments = await db.payment.findMany({
         where: paymentWhere,
         include: {
           booking: {
-            where: Object.keys(bookingSearchWhere).length > 0 ? bookingSearchWhere : undefined,
             include: {
               client: {
                 select: {

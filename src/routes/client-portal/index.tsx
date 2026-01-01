@@ -19,7 +19,7 @@ interface Booking {
   clientId: number;
   cleanerId: number | null;
   serviceType: string;
-  scheduledDate: string;
+  scheduledDate: string | Date;
   scheduledTime: string;
   durationHours: number | null;
   address: string;
@@ -73,6 +73,8 @@ function ClientPortalPage() {
   const [tooltipTarget, setTooltipTarget] = useState<HTMLElement | null>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
 
+
+
   // Redirect if not authenticated or not a client
   useEffect(() => {
     if (!token || !user) {
@@ -109,6 +111,19 @@ function ClientPortalPage() {
   }
 
   const currentQuery = activeTab === "upcoming" ? upcomingQuery : allBookingsQuery;
+
+  // Sync hoveredBooking with latest data when bookings update
+  useEffect(() => {
+    if (hoveredBooking && currentQuery.data?.bookings) {
+      // Cast to any to avoid strict type mismatch if there are minor optional prop differences
+      const freshBooking = currentQuery.data.bookings.find(b => b.id === hoveredBooking.id);
+
+      // Only update if the object reference has changed (implies data update)
+      if (freshBooking && freshBooking !== hoveredBooking) {
+        setHoveredBooking(freshBooking as unknown as Booking);
+      }
+    }
+  }, [currentQuery.data, hoveredBooking]);
 
   return (
     <PortalLayout portalType="client">
@@ -188,8 +203,8 @@ function ClientPortalPage() {
                         {activeTab === "upcoming" ? "No Upcoming Bookings" : "No Bookings Yet"}
                       </p>
                       <p className="text-gray-600 text-sm mb-4">
-                        {activeTab === "upcoming" 
-                          ? "You don't have any upcoming cleaning appointments" 
+                        {activeTab === "upcoming"
+                          ? "You don't have any upcoming cleaning appointments"
                           : "Start by booking your first cleaning service"}
                       </p>
                       <button
@@ -241,7 +256,7 @@ function ClientPortalPage() {
                         <h3 className="font-bold text-lg mb-4 text-gray-900 font-heading group-hover:text-primary transition-colors">
                           {booking.serviceType}
                         </h3>
-                        
+
                         <div className="space-y-3 text-sm">
                           <div className="flex items-start gap-3">
                             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -291,7 +306,7 @@ function ClientPortalPage() {
                               <p className="text-gray-900 font-medium line-clamp-2">{booking.address}</p>
                             </div>
                           </div>
-                          
+
                           {booking.cleaner && (
                             <div className="pt-3 border-t border-gray-100">
                               <div className="flex items-start gap-3">
@@ -312,7 +327,7 @@ function ClientPortalPage() {
                               </div>
                             </div>
                           )}
-                          
+
                           {!booking.cleaner && (
                             <div className="pt-3 border-t border-gray-100">
                               <div className="flex items-center gap-2 text-yellow-700 bg-yellow-50 rounded-lg p-2.5">
@@ -335,7 +350,7 @@ function ClientPortalPage() {
                               </p>
                             </div>
                           )}
-                          
+
                           {booking.specialInstructions && (
                             <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                               <p className="text-xs text-gray-600 font-semibold mb-1.5">

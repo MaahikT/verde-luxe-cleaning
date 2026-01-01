@@ -7,7 +7,7 @@ import { baseProcedure } from "~/server/trpc/main";
 import { env } from "~/server/env";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2025-12-15.clover",
 });
 
 export const deleteSavedPaymentMethod = baseProcedure

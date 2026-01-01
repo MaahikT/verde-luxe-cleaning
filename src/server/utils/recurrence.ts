@@ -12,6 +12,9 @@ export async function generateFutureBookings(
   originalBooking: Booking,
   frequency: string
 ) {
+  const executionId = Math.random().toString(36).substring(7);
+  console.log(`[generateFutureBookings] START - Execution ID: ${executionId} for Booking ID: ${originalBooking.id}, Frequency: ${frequency}`);
+
   if (frequency === RecurrenceFrequency.ONE_TIME) return;
 
   const startDate = new Date(originalBooking.scheduledDate);
@@ -56,6 +59,30 @@ export async function generateFutureBookings(
     };
 
     futureBookings.push(newBookingData);
+
+    // Check if a booking already exists for this client on this date (to prevent duplicates)
+    const startOfDay = new Date(nextDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(nextDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existing = await db.booking.findFirst({
+        where: {
+            clientId: originalBooking.clientId,
+            status: { not: "CANCELLED" },
+            scheduledDate: {
+                gte: startOfDay,
+                lte: endOfDay
+            }
+        }
+    });
+
+    if (existing) {
+        console.log(`Skipping recurrence generation for ${nextDate.toISOString()} - booking already exists.`);
+        nextDate = incrementDate(nextDate, frequency);
+        continue;
+    }
 
     // Create the booking in DB
     try {

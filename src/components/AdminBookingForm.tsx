@@ -14,6 +14,17 @@ import { toast } from "react-hot-toast";
 import { sanitizePhoneNumber } from "~/utils/formatPhoneNumber";
 import { formatDurationHours } from "~/utils/formatTime";
 
+// Helper function to parse selectedExtras JSON safely
+const parseSelectedExtras = (extrasJson: string | null | undefined): number[] => {
+  if (!extrasJson) return [];
+  try {
+    return JSON.parse(extrasJson);
+  } catch (e) {
+    console.error("Failed to parse selectedExtras:", e);
+    return [];
+  }
+};
+
 // Helper function to split float hours into hours and minutes for input fields
 const floatHoursToHMS = (duration: number | null | undefined) => {
   if (!duration || duration <= 0) return { h: undefined, m: undefined };
@@ -71,7 +82,7 @@ interface Booking {
   clientId: number;
   cleanerId: number | null;
   serviceType: string;
-  scheduledDate: string;
+  scheduledDate: string | Date;
   scheduledTime: string;
   durationHours: number | null;
   address: string;
@@ -84,8 +95,8 @@ interface Booking {
   numberOfBathrooms: number | null;
   numberOfCleanersRequested: number | null;
   cleanerPaymentAmount: number | null;
-  paymentMethod: string | null;
-  paymentDetails: string | null;
+  paymentMethod?: string | null;
+  paymentDetails?: string | null;
   selectedExtras?: string | null;
   clientEmail?: string;
   clientFirstName?: string;
@@ -108,8 +119,11 @@ interface AdminBookingFormProps {
   initialCleanerId?: number;
 }
 
+interface AdminBookingFormWithPaymentProps extends AdminBookingFormProps {
+}
+
 // Wrapper component that handles Stripe payment logic
-function AdminBookingFormWithPayment(props: AdminBookingFormProps) {
+function AdminBookingFormWithPayment({ ...props }: AdminBookingFormWithPaymentProps) {
   const stripe = useStripe();
   const elements = useElements();
   const trpc = useTRPC();
@@ -149,8 +163,8 @@ function AdminBookingFormWithPayment(props: AdminBookingFormProps) {
     delete (submissionData as any).durationHoursInput;
     delete (submissionData as any).durationMinutesInput;
 
-    // If payment method is CASH, just submit normally
-    if (submissionData.paymentMethod === "CASH") {
+    // If payment method is CASH or existing CREDIT_CARD (not changing), just submit normally
+    if (submissionData.paymentMethod === "CASH" || submissionData.paymentMethod === "CREDIT_CARD") {
       props.onSubmit(submissionData);
       return;
     }
@@ -380,8 +394,10 @@ function AdminBookingFormInner({
   });
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const [overrideConflict, setOverrideConflict] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"NEW_CREDIT_CARD" | "SAVED_CARD" | "CASH">(
-    booking?.paymentMethod === "CASH" ? "CASH" : "NEW_CREDIT_CARD"
+  const [paymentMethod, setPaymentMethod] = useState<"NEW_CREDIT_CARD" | "SAVED_CARD" | "CASH" | "CREDIT_CARD">(
+    booking?.paymentMethod === "CASH"
+      ? "CASH"
+      : (booking?.paymentMethod === "CREDIT_CARD" || booking?.paymentMethod === "SAVED_CARD" ? "CREDIT_CARD" : "NEW_CREDIT_CARD")
   );
   const [selectedSavedCard, setSelectedSavedCard] = useState<number | null>(null);
   const [saveCardForFuture, setSaveCardForFuture] = useState(false);
@@ -397,6 +413,7 @@ function AdminBookingFormInner({
     setValue,
     control,
   } = useForm<BookingFormData>({
+    // @ts-ignore
     resolver: zodResolver(bookingSchema),
     defaultValues: booking
       ? {
@@ -421,18 +438,10 @@ function AdminBookingFormInner({
           numberOfBathrooms: booking.numberOfBathrooms || undefined,
           numberOfCleanersRequested: booking.numberOfCleanersRequested || undefined,
           cleanerPaymentAmount: booking.cleanerPaymentAmount || undefined,
-          paymentMethod: (booking.paymentMethod === "CASH" ? "CASH" : "NEW_CREDIT_CARD") as any,
+          paymentMethod: (booking.paymentMethod === "CASH" ? "CASH" : (booking.paymentMethod === "CREDIT_CARD" || booking.paymentMethod === "SAVED_CARD" ? "CREDIT_CARD" : "NEW_CREDIT_CARD")) as "CASH" | "CREDIT_CARD" | "SAVED_CARD" | "NEW_CREDIT_CARD",
           paymentDetails: booking.paymentDetails || "",
-          selectedExtras: (() => {
-            if (!booking.selectedExtras) return [];
-            try {
-              return JSON.parse(booking.selectedExtras);
-            } catch (e) {
-              console.error("Failed to parse selectedExtras:", e);
-              return [];
-            }
-          })(),
-        }
+          selectedExtras: parseSelectedExtras(booking.selectedExtras),
+        } as any
       : {
           paymentMethod: "NEW_CREDIT_CARD" as any,
           clientId: initialClientId,
@@ -474,7 +483,7 @@ function AdminBookingFormInner({
 
   useEffect(() => {
     if (formPaymentMethod) {
-      setPaymentMethod(formPaymentMethod as "NEW_CREDIT_CARD" | "SAVED_CARD" | "CASH");
+      setPaymentMethod(formPaymentMethod as "NEW_CREDIT_CARD" | "SAVED_CARD" | "CASH" | "CREDIT_CARD");
     }
   }, [formPaymentMethod]);
 
@@ -539,6 +548,21 @@ function AdminBookingFormInner({
     enabled: !!token && !!serviceType,
   });
 
+  // Force refetch price calculation when dependencies change
+  useEffect(() => {
+    if (serviceType) {
+        priceCalculationQuery.refetch();
+    }
+  }, [
+      serviceType,
+      houseSquareFootage,
+      basementSquareFootage,
+      numberOfBedrooms,
+      numberOfBathrooms,
+      selectedExtras,
+      priceCalculationQuery
+  ]);
+
   // Note: Removed the useEffect that auto-updates finalPrice and durationHours
   // This allows manual override while still showing calculated estimates for reference
 
@@ -585,7 +609,7 @@ function AdminBookingFormInner({
       delete (submissionData as any).durationHoursInput;
       delete (submissionData as any).durationMinutesInput;
 
-      onSaveAsLead(submissionData);
+      onSaveAsLead(submissionData as any);
     })();
   };
 
@@ -622,7 +646,7 @@ function AdminBookingFormInner({
         </div>
 
         {/* Scrollable Form Content */}
-        <form onSubmit={handleSubmit((data) => onSubmit({ ...data, overrideConflict }))} className="flex-1 overflow-y-auto">
+        <form id="admin-booking-form" onSubmit={handleSubmit((data) => onSubmit({ ...(data as unknown as BookingFormData), overrideConflict }))} className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Client Selection Mode Toggle */}
             {!booking && (
@@ -1341,6 +1365,53 @@ function AdminBookingFormInner({
                       </div>
                     )}
 
+                    {/* Existing Card - Only show if editing existing booking with card */}
+                    {(booking?.paymentMethod === "CREDIT_CARD" || booking?.paymentMethod === "SAVED_CARD") && (
+                        <div className="mb-3">
+                         <button
+                           type="button"
+                           onClick={() => {
+                             setValue("paymentMethod", "CREDIT_CARD");
+                             setPaymentMethod("CREDIT_CARD");
+                             setSelectedSavedCard(null);
+                             setValue("savedPaymentMethodId", undefined);
+                           }}
+                           className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                             paymentMethod === "CREDIT_CARD"
+                               ? "border-primary bg-primary/5 shadow-sm"
+                               : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                           }`}
+                         >
+                           <div className="flex items-center gap-3">
+                             <div
+                               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                                 paymentMethod === "CREDIT_CARD"
+                                   ? "bg-primary border-primary"
+                                   : "border-gray-300"
+                               }`}
+                             >
+                               {paymentMethod === "CREDIT_CARD" && (
+                                 <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+                               )}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <h4 className="font-semibold text-gray-900 text-sm">Keep Existing Card</h4>
+                               <p className="text-xs text-gray-600 mt-0.5">
+                                 {booking.paymentDetails || "Use previously saved payment details"}
+                               </p>
+                             </div>
+                             <CreditCard className="w-5 h-5 text-gray-400" />
+                           </div>
+                         </button>
+                         {paymentMethod !== "CREDIT_CARD" && (
+                             <p className="text-xs text-amber-600 mt-1 ml-1 flex items-center gap-1">
+                                 <AlertTriangle className="w-3 h-3" />
+                                 Changing this will discard the existing payment authorization
+                             </p>
+                         )}
+                        </div>
+                    )}
+
                     {/* New Credit Card */}
                     <button
                       type="button"
@@ -1570,7 +1641,7 @@ function AdminBookingFormInner({
 
               <button
                 type="submit"
-                onClick={handleSubmit((data) => onSubmit({ ...data, overrideConflict }))}
+                form="admin-booking-form"
                 disabled={isSubmitting || isDeleting || (isSelectedCleanerUnavailable && !overrideConflict)}
                 className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
               >
@@ -1649,4 +1720,6 @@ export function AdminBookingForm(props: AdminBookingFormProps) {
       <AdminBookingFormWithPayment {...props} />
     </Elements>
   );
+
+
 }

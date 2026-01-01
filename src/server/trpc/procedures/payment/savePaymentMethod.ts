@@ -7,7 +7,7 @@ import { baseProcedure } from "~/server/trpc/main";
 import { env } from "~/server/env";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2025-12-15.clover",
 });
 
 export const savePaymentMethod = baseProcedure
@@ -124,7 +124,7 @@ export const savePaymentMethod = baseProcedure
       if (existingSavedMethod) {
         // Payment method already exists - update it
         console.log(`Payment method ${input.paymentMethodId} already exists for user ${input.clientId}, updating...`);
-        
+
         // If setting as default, unset other defaults first
         if (input.setAsDefault) {
           await db.savedPaymentMethod.updateMany({
@@ -156,7 +156,7 @@ export const savePaymentMethod = baseProcedure
       } else {
         // Payment method doesn't exist - create it
         console.log(`Creating new saved payment method ${input.paymentMethodId} for user ${input.clientId}`);
-        
+
         // If setting as default, unset other defaults first
         if (input.setAsDefault) {
           await db.savedPaymentMethod.updateMany({
@@ -197,7 +197,7 @@ export const savePaymentMethod = baseProcedure
       };
     } catch (error) {
       console.error("Error in savePaymentMethod:", error);
-      
+
       if (error instanceof TRPCError) {
         throw error;
       }
@@ -207,16 +207,16 @@ export const savePaymentMethod = baseProcedure
           message: `Stripe error: ${error.message}`,
         });
       }
-      
+
       // Log the full error for debugging
       console.error("Unexpected error details:", {
         message: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined,
       });
-      
+
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: error instanceof Error 
+        message: error instanceof Error
           ? `Failed to save payment method: ${error.message}`
           : "Failed to save payment method",
       });

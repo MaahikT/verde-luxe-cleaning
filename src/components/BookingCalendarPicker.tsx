@@ -19,10 +19,18 @@ interface CleanerDetails {
 
 interface BookingAvailability {
   id: number;
-  scheduledDate: string;
+  scheduledDate: Date;
   scheduledTime: string;
   durationHours: number | null;
   serviceType: string;
+  cleaner: CleanerDetails | null;
+}
+
+interface TimeOffRequest {
+  id: number;
+  startDate: Date;
+  endDate: Date;
+  reason: string | null;
   cleaner: CleanerDetails | null;
 }
 
@@ -35,6 +43,7 @@ export function BookingCalendarPicker({
   const { token } = useAuthStore();
   const [currentDate, setCurrentDate] = useState(() => {
     // Initialize with the selected date if provided, otherwise current month
+    // Handle potential string input safely
     return value ? new Date(value + "T12:00:00") : new Date();
   });
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
@@ -57,8 +66,8 @@ export function BookingCalendarPicker({
   const availabilityQuery = useQuery({
     ...trpc.getBookingAvailability.queryOptions({
       authToken: token || "",
-      startDate: monthStart.toISOString().split("T")[0],
-      endDate: monthEnd.toISOString().split("T")[0],
+      startDate: monthStart.toISOString().split("T")[0] || "",
+      endDate: monthEnd.toISOString().split("T")[0] || "",
     }),
     enabled: !!token,
   });
@@ -93,19 +102,34 @@ export function BookingCalendarPicker({
   };
 
   const getBookingsForDate = (date: Date): BookingAvailability[] => {
-    if (!availabilityQuery.data) return [];
+    if (!availabilityQuery.data?.bookings) return [];
 
     const year = date.getFullYear();
     const month = date.getMonth();
     const day = date.getDate();
 
     return availabilityQuery.data.bookings.filter((booking) => {
-      const bookingDate = new Date(booking.scheduledDate);
+      // scheduledDate is a Date object from tRPC/superjson
+      const bookingDate = booking.scheduledDate;
       return (
         bookingDate.getFullYear() === year &&
         bookingDate.getMonth() === month &&
         bookingDate.getDate() === day
       );
+    });
+  };
+
+  const getTimeOffsForDate = (date: Date): TimeOffRequest[] => {
+    if (!availabilityQuery.data?.timeOffRequests) return [];
+
+    // Normalize check date to noon UTC to match storage convention
+    const checkDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0));
+
+    return availabilityQuery.data.timeOffRequests.filter((request) => {
+      // startDate/endDate are Date objects from tRPC/superjson
+      const start = request.startDate;
+      const end = request.endDate;
+      return checkDate >= start && checkDate <= end;
     });
   };
 
@@ -159,6 +183,7 @@ export function BookingCalendarPicker({
   const year = currentDate.getFullYear();
 
   const selectedDayBookings = selectedDate ? getBookingsForDate(selectedDate) : [];
+  const selectedDayTimeOffs = selectedDate ? getTimeOffsForDate(selectedDate) : [];
 
   // Calculate busy level for visual indication (0-3 scale)
   const getBusyLevel = (bookingCount: number): number => {
@@ -299,7 +324,7 @@ export function BookingCalendarPicker({
       </div>
 
       {/* Schedule Breakdown for Selected Day */}
-      {selectedDate && selectedDayBookings.length > 0 && (
+      {selectedDate && (selectedDayBookings.length > 0 || selectedDayTimeOffs.length > 0) && (
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-4">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-5 h-5 text-blue-600" />
@@ -340,6 +365,38 @@ export function BookingCalendarPicker({
                     <span className={booking.cleaner ? "text-gray-700" : "text-gray-400 italic"}>
                       {cleanerName}
                     </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Time Off Requests */}
+            {selectedDayTimeOffs.map((request) => {
+              const cleanerName = request.cleaner
+                ? `${request.cleaner.firstName || ""} ${request.cleaner.lastName || ""}`.trim() || "Unknown Cleaner"
+                : "Unknown Cleaner";
+
+              return (
+                <div
+                  key={`timeoff-${request.id}`}
+                  className="bg-orange-50 rounded-lg border border-orange-200 p-3"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900 flex items-center gap-2">
+                        <span>Time Off</span>
+                        <span className="text-xs font-normal text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">
+                          Unavailable
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {request.reason || "Scheduled Time Off"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-500 flex items-center gap-1">
+                    <span className="font-medium">Cleaner:</span>
+                    <span className="text-gray-900">{cleanerName}</span>
                   </div>
                 </div>
               );

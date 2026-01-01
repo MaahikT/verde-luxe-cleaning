@@ -7,7 +7,7 @@ interface Booking {
   clientId: number;
   cleanerId: number | null;
   serviceType: string;
-  scheduledDate: string;
+  scheduledDate: string | Date;
   scheduledTime: string;
   durationHours: number | null;
   address: string;
@@ -54,8 +54,8 @@ export function BookingDetailsSidePanel({
 }: BookingDetailsSidePanelProps) {
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateInput: string | Date) => {
+    const date = new Date(dateInput);
     return date.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
@@ -65,8 +65,7 @@ export function BookingDetailsSidePanel({
   };
 
   const getServiceFrequencyDisplay = () => {
-    // For Standard Home Cleaning, show the actual frequency
-    if (booking.serviceType === "Standard Home Cleaning" && booking.serviceFrequency) {
+    if (booking.serviceFrequency) {
       const frequencyMap: { [key: string]: string } = {
         ONE_TIME: "One-Time",
         WEEKLY: "Weekly",
@@ -75,7 +74,6 @@ export function BookingDetailsSidePanel({
       };
       return frequencyMap[booking.serviceFrequency] || "One-Time";
     }
-    // For other service types, always show "One-Time"
     return "One-Time";
   };
 

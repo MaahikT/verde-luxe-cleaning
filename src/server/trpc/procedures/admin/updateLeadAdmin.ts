@@ -93,7 +93,7 @@ export const updateLeadAdmin = baseProcedure
             firstName = client.firstName || undefined;
             lastName = client.lastName || undefined;
             email = client.email;
-            phone = client.phone || undefined;
+            phone = client.phone || "N/A";
         }
       }
 

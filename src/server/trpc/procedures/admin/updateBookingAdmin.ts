@@ -39,6 +39,7 @@ export const updateBookingAdmin = baseProcedure
       replacePaymentMethod: z.boolean().optional(), // Whether to replace existing payment method
       selectedExtras: z.array(z.number()).optional(),
       overrideConflict: z.boolean().optional(), // Allow admin to override cleaner conflicts
+      updateMode: z.enum(['SINGLE', 'FUTURE']).optional().default('SINGLE'),
     })
   )
   .mutation(async ({ input }) => {
@@ -187,6 +188,115 @@ export const updateBookingAdmin = baseProcedure
           },
         },
       });
+
+      // Handle recurring updates
+      if (input.updateMode === 'FUTURE') {
+        const originalScheduledDate = new Date(existingBooking.scheduledDate);
+        // Ensure new scheduledDate is valid if provided, otherwise fallback to existing
+        const newScheduledDate = input.scheduledDate ? new Date(input.scheduledDate) : originalScheduledDate;
+
+        const dateDiff = newScheduledDate.getTime() - originalScheduledDate.getTime();
+
+        // Only valid if date changed. Time change handled separately if needed, but here assuming date shift primarily.
+        // If time changed, we update that too.
+
+        if ((dateDiff !== 0 || input.scheduledTime !== undefined) && (!input.serviceFrequency || input.serviceFrequency === existingBooking.serviceFrequency)) {
+             const futureBookings = await db.booking.findMany({
+                where: {
+                    clientId: existingBooking.clientId,
+                    serviceType: existingBooking.serviceType,
+                    serviceFrequency: existingBooking.serviceFrequency,
+                    scheduledDate: {
+                        gt: existingBooking.scheduledDate,
+                    },
+                    status: {
+                        not: 'CANCELLED'
+                    },
+                    id: {
+                        not: input.bookingId
+                    }
+                }
+             });
+
+             for (const futureBooking of futureBookings) {
+                 const updateFutureData: any = {};
+
+                 // Calculate interval to preserve relative spacing (e.g. gaps) but align Day of Week
+                 const oldFutureDate = new Date(futureBooking.scheduledDate);
+                 const originalAnchorDate = new Date(existingBooking.scheduledDate);
+
+                 // Default to simple shift if not a standard frequency or calculation fails
+                 let newFutureDate = new Date(oldFutureDate.getTime() + dateDiff);
+
+                 const frequency = input.serviceFrequency || existingBooking.serviceFrequency;
+
+                 if (frequency === 'WEEKLY' || frequency === 'BIWEEKLY') {
+                     const daysDiff = (oldFutureDate.getTime() - originalAnchorDate.getTime()) / (1000 * 60 * 60 * 24);
+                     const intervalDays = frequency === 'WEEKLY' ? 7 : 14;
+                     const intervalsAway = Math.round(daysDiff / intervalDays);
+
+                     if (intervalsAway > 0) {
+                         const targetDate = new Date(newScheduledDate);
+                         targetDate.setDate(targetDate.getDate() + (intervalsAway * intervalDays));
+                         newFutureDate = targetDate;
+                     }
+                 } else if (frequency === 'MONTHLY') {
+                     // Approximate months away
+                     const monthsDiff = (oldFutureDate.getFullYear() - originalAnchorDate.getFullYear()) * 12 + (oldFutureDate.getMonth() - originalAnchorDate.getMonth());
+                     if (monthsDiff > 0) {
+                         const targetDate = new Date(newScheduledDate);
+                         targetDate.setMonth(targetDate.getMonth() + monthsDiff);
+                         newFutureDate = targetDate;
+                     }
+                 }
+
+                 updateFutureData.scheduledDate = newFutureDate;
+
+                 if (input.scheduledTime !== undefined) {
+                     updateFutureData.scheduledTime = input.scheduledTime;
+                 }
+
+                 if (Object.keys(updateFutureData).length > 0) {
+                     await db.booking.update({
+                         where: { id: futureBooking.id },
+                         data: updateFutureData
+                     });
+                 }
+             }
+        }
+      }
+
+      // Generate recurring bookings ONLY if frequency is changed to a recurring type
+      if (input.serviceFrequency &&
+          ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(input.serviceFrequency) &&
+          input.serviceFrequency !== existingBooking.serviceFrequency
+         ) {
+
+         // Fix: When changing frequency, we must clear "future" bookings that might conflict or be "off-cadence"
+         // But we must strictly preserve history.
+         // Cutoff is the LATER of (Today, ScheduledDate).
+         const now = new Date();
+         const scheduledDate = new Date(existingBooking.scheduledDate);
+
+         // If booking is in the past, we start clearing from tomorrow (or technically > now)
+         // If booking is in the future, we start clearing from after that booking.
+         const cutoffDate = scheduledDate > now ? scheduledDate : now;
+
+         // Delete future bookings of the same service type to "clear the runway"
+         console.log(`[Recurrence Update] Clearing future bookings after ${cutoffDate.toISOString()}`);
+         const deleteResult = await db.booking.deleteMany({
+            where: {
+                clientId: existingBooking.clientId,
+                serviceType: existingBooking.serviceType, // Only match this service type
+                scheduledDate: { gt: cutoffDate },
+                status: { notIn: ["CANCELLED", "COMPLETED", "IN_PROGRESS"] }
+            }
+         });
+         console.log(`[Recurrence Update] Deleted ${deleteResult.count} bookings.`);
+
+         // Await recurrence generation to ensure consistency
+         await generateFutureBookings(booking, input.serviceFrequency);
+      }
 
       // Check configuration for payment hold delay
       const configuration = await db.configuration.findFirst();
@@ -339,13 +449,120 @@ export const updateBookingAdmin = baseProcedure
         }
       }
 
-      // Generate recurring bookings if frequency is changed to a recurring type
-      if (input.serviceFrequency && ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(input.serviceFrequency)) {
-         // Run in background
-         generateFutureBookings(booking, input.serviceFrequency).catch(err => {
-             console.error("Error generating recurring bookings on update:", err);
-         });
+      // Handle price updates for existing payment holds
+      // Only runs if we're NOT replacing the payment method (since that logic handles holds separately)
+      if (!input.replacePaymentMethod && input.finalPrice !== undefined && input.finalPrice !== null && existingBooking.finalPrice !== input.finalPrice) {
+        // Find the most recent active payment transaction (hold or legitimate charge attempts)
+        const activeHold = await db.payment.findFirst({
+          where: {
+            bookingId: input.bookingId,
+            isCaptured: false,
+            // We don't filter by status 'requires_capture' strictly here because it might be 'requires_authorization' etc.
+            // We'll validate the status before acting.
+            // Must have a Stripe ID.
+            stripePaymentIntentId: { not: null },
+            status: { notIn: ["canceled", "failed"] } // Exclude terminal failed states
+          },
+          orderBy: { createdAt: "desc" }
+        });
+
+        if (activeHold && activeHold.stripePaymentIntentId) {
+          try {
+            const newAmountCents = Math.round(input.finalPrice * 100);
+
+            // Check current status from DB (or fetch from Stripe to be sure, but DB is faster and acceptable)
+            // If status is 'requires_capture', we CANNOT update amount. We must create NEW and Cancel OLD.
+            if (activeHold.status === 'requires_capture') {
+                 // 1. Fetch Customer ID
+                 const client = await db.user.findUnique({
+                     where: { id: existingBooking.clientId },
+                     select: { stripeCustomerId: true }
+                 });
+
+                 if (!client?.stripeCustomerId || !activeHold.stripePaymentMethodId) {
+                     throw new Error("Cannot update hold: Missing Stripe Customer ID or Payment Method ID");
+                 }
+
+                 // 2. Create NEW Payment Intent
+                 const newPaymentIntent = await stripe.paymentIntents.create({
+                     amount: newAmountCents,
+                     currency: "usd",
+                     customer: client.stripeCustomerId,
+                     payment_method: activeHold.stripePaymentMethodId,
+                     capture_method: "manual",
+                     confirm: true,
+                     off_session: true,
+                     description: `Booking #${input.bookingId}: ${input.serviceType || existingBooking.serviceType} (Updated Price)`,
+                     metadata: {
+                         bookingId: input.bookingId.toString(),
+                         clientId: existingBooking.clientId.toString(),
+                     }
+                 });
+
+                 if (newPaymentIntent.status !== 'requires_capture' && newPaymentIntent.status !== 'requires_confirmation') {
+                     // If it failed to authorize (e.g. requires action), we might want to abort?
+                     // If 'requires_action', we can't complete it off-session.
+                     if (newPaymentIntent.status === 'requires_action') {
+                          // Clean up the new intent since we can't use it easily
+                          await stripe.paymentIntents.cancel(newPaymentIntent.id);
+                          throw new Error("Cannot update hold: New amount requires authentication (3DS).");
+                     }
+                 }
+
+                 // 3. Cancel OLD Payment Intent
+                 await stripe.paymentIntents.cancel(activeHold.stripePaymentIntentId);
+
+                 // 4. Update DB Record to point to NEW Intent
+                 await db.payment.update({
+                     where: { id: activeHold.id },
+                     data: {
+                         amount: input.finalPrice,
+                         stripePaymentIntentId: newPaymentIntent.id,
+                         status: newPaymentIntent.status,
+                         description: `Payment hold for booking #${input.bookingId} (Replaced for Price Update)`
+                     }
+                 });
+
+            } else {
+                // For other statuses (e.g. requires_payment_method), try to update existing
+                let updatedPI = await stripe.paymentIntents.update(activeHold.stripePaymentIntentId, {
+                  amount: newAmountCents
+                });
+
+                if (updatedPI.status === 'requires_confirmation') {
+                    updatedPI = await stripe.paymentIntents.confirm(activeHold.stripePaymentIntentId);
+                }
+
+                await db.payment.update({
+                  where: { id: activeHold.id },
+                  data: {
+                    amount: input.finalPrice,
+                    status: updatedPI.status,
+                    description: `Payment hold for booking #${input.bookingId} (Updated Amount)`
+                  }
+                });
+            }
+
+            // Update booking payment details to reflect the updated hold (optional but good for visibility)
+            // But we might overwrite existing details which might be custom?
+            // "paymentDetails" in booking usually says "Card ending in ... - Hold: pi_..."
+            // Let's leave booking.paymentDetails alone as it mostly tracks the method/logic.
+          } catch (error) {
+            console.error("Failed to update payment hold amount:", error);
+            // We don't throw here to avoid blocking the booking update, but user should know?
+            // For admin portal, maybe better to throw so they know it failed?
+            // "Fix the booking update logic" implies it should work.
+            // If it fails, the price is updated in DB but hold is wrong.
+            // I'll log it. Throwing might be safer for data integrity.
+            throw new TRPCError({
+               code: "INTERNAL_SERVER_ERROR",
+               message: "Failed to update Stripe payment hold amount: " + (error instanceof Error ? error.message : "Unknown error")
+            });
+          }
+        }
       }
+
+
 
       return { booking };
     } catch (error) {

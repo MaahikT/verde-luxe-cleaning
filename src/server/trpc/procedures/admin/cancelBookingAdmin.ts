@@ -176,8 +176,8 @@ export const cancelBookingAdmin = baseProcedure
         const futureBookings = await db.booking.findMany({
           where: {
             clientId: booking.clientId,
-            serviceType: booking.serviceType,
-            serviceFrequency: booking.serviceFrequency,
+            // serviceType: booking.serviceType, <--- REMOVED to cancel ALL future bookings
+            // serviceFrequency: booking.serviceFrequency, <--- REMOVED to cancel ALL future bookings
             scheduledDate: {
               gt: booking.scheduledDate,
             },

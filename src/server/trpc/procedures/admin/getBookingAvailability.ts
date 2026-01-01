@@ -41,7 +41,9 @@ export const getBookingAvailability = baseProcedure
 
       // Create an inclusive end date (end of day) to ensure all bookings on the last day are included
       const endDateInclusive = new Date(input.endDate);
-      endDateInclusive.setHours(23, 59, 59, 999);
+      endDateInclusive.setUTCHours(23, 59, 59, 999);
+
+
 
       // Fetch bookings within date range with minimal fields
       const bookings = await db.booking.findMany({
@@ -73,7 +75,39 @@ export const getBookingAvailability = baseProcedure
         },
       });
 
-      return { bookings };
+      // Fetch approved time-off requests within date range
+      const timeOffRequests = await db.timeOffRequest.findMany({
+        where: {
+          status: "APPROVED",
+          AND: [
+            {
+              startDate: {
+                lte: endDateInclusive,
+              },
+            },
+            {
+              endDate: {
+                gte: new Date(input.startDate),
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          startDate: true,
+          endDate: true,
+          reason: true,
+          cleaner: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      });
+
+      return { bookings, timeOffRequests };
     } catch (error) {
       if (error instanceof TRPCError) {
         throw error;

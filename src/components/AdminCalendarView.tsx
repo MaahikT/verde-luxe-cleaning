@@ -1,5 +1,5 @@
 import { Calendar, ChevronLeft, ChevronRight, Plus, CheckSquare } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { formatTime12Hour } from "~/utils/formatTime";
 import { BookingTooltip } from "~/components/BookingTooltip";
 
@@ -22,9 +22,9 @@ export interface Booking {
   numberOfBathrooms: number | null;
   numberOfCleanersRequested: number | null;
   cleanerPaymentAmount: number | null;
-  selectedExtras?: string | null;
-  paymentMethod?: string | null;
-  paymentDetails?: string | null;
+  selectedExtras: any;
+  paymentMethod: string | null;
+  paymentDetails: string | null;
   client: {
     id: number;
     firstName: string | null;
@@ -39,6 +39,7 @@ export interface Booking {
     email: string;
     phone: string | null;
     color?: string | null;
+    role?: string;
   } | null;
   checklist?: {
     id: number;
@@ -54,6 +55,7 @@ interface AdminCalendarViewProps {
   onBookingClick: (booking: Booking) => void;
   onCreateBooking: () => void;
   onViewChecklist?: (bookingId: number) => void;
+  onBookingUpdate?: (booking: Booking, newDate: Date, newTime?: string, updateMode?: 'SINGLE' | 'FUTURE') => void;
 }
 
 export function AdminCalendarView({
@@ -61,12 +63,29 @@ export function AdminCalendarView({
   onBookingClick,
   onCreateBooking,
   onViewChecklist,
+  onBookingUpdate,
 }: AdminCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<"month" | "week" | "day">("month");
   const [hoveredBooking, setHoveredBooking] = useState<Booking | null>(null);
   const [tooltipTarget, setTooltipTarget] = useState<HTMLElement | null>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
+
+  // Sync hoveredBooking with latest data when bookings update
+  useEffect(() => {
+    if (hoveredBooking) {
+      const freshBooking = bookings.find(b => b.id === hoveredBooking.id);
+      // Only update if the object reference has changed (implies data update)
+      if (freshBooking && freshBooking !== hoveredBooking) {
+        setHoveredBooking(freshBooking);
+      }
+    }
+  }, [bookings, hoveredBooking]);
+
+  // Drag and drop state
+  const [draggedBooking, setDraggedBooking] = useState<Booking | null>(null);
+  const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
+  const [pendingDrop, setPendingDrop] = useState<{ booking: Booking, newDate: Date, newTime?: string } | null>(null);
 
   const getMonthStart = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -203,6 +222,109 @@ export function AdminCalendarView({
     }
   };
 
+  // Drag Handlers
+  const handleDragStart = (e: React.DragEvent, booking: Booking) => {
+    if (!onBookingUpdate) return;
+
+    setDraggedBooking(booking);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("bookingId", booking.id.toString());
+
+    // Set a custom drag image or style if needed
+    // e.dataTransfer.setDragImage(img, 0, 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!onBookingUpdate || !draggedBooking) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDropOnDay = (e: React.DragEvent, targetDate: Date) => {
+    if (!onBookingUpdate || !draggedBooking) return;
+    e.preventDefault();
+
+    // Don't update if dropped on source day in month view (unless we want to support time change later via modal, currently just date)
+    const sourceDate = new Date(draggedBooking.scheduledDate);
+    if (
+        sourceDate.getDate() === targetDate.getDate() &&
+        sourceDate.getMonth() === targetDate.getMonth() &&
+        sourceDate.getFullYear() === targetDate.getFullYear()
+    ) {
+        setDraggedBooking(null);
+        return;
+    }
+
+    if (draggedBooking.serviceFrequency && draggedBooking.serviceFrequency !== 'ONE_TIME') {
+        setPendingDrop({ booking: draggedBooking, newDate: targetDate });
+        setShowRecurrenceModal(true);
+    } else {
+        onBookingUpdate(draggedBooking, targetDate, undefined, 'SINGLE');
+    }
+    setDraggedBooking(null);
+  };
+
+  const handleDropOnGrid = (e: React.DragEvent) => {
+    if (!onBookingUpdate || !draggedBooking || !gridRef.current) return;
+    e.preventDefault();
+
+    const rect = gridRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Calculate Day
+    const colWidth = rect.width / (view === 'day' ? 1 : 7);
+    const colIndex = Math.floor(x / colWidth);
+
+    // Safety check for index
+    if (colIndex < 0 || colIndex >= days.length) {
+        setDraggedBooking(null);
+        return;
+    }
+
+    const targetDate = days[colIndex];
+    if (!targetDate) { // Should not happen if logic matches display
+        setDraggedBooking(null);
+        return;
+    }
+
+    // Calculate Time
+    // Grid starts at 7 AM. 60px per hour.
+    const GRID_START_HOUR = 7;
+    const HOUR_HEIGHT = 60;
+
+    const hoursFromStart = y / HOUR_HEIGHT;
+    const totalHours = GRID_START_HOUR + hoursFromStart;
+
+    let hour = Math.floor(totalHours);
+    let minutes = Math.round((totalHours - hour) * 60);
+
+    // Snap to nearest 15 minutes
+    const SNAP_MINUTES = 15;
+    const snappedMinutes = Math.round(minutes / SNAP_MINUTES) * SNAP_MINUTES;
+
+    if (snappedMinutes === 60) {
+        hour += 1;
+        minutes = 0;
+    } else {
+        minutes = snappedMinutes;
+    }
+
+    // Format new time string "HH:MM"
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const newTime = `${hour.toString().padStart(2, '0')}:${formattedMinutes}`;
+
+    if (draggedBooking.serviceFrequency && draggedBooking.serviceFrequency !== 'ONE_TIME') {
+        setPendingDrop({ booking: draggedBooking, newDate: targetDate, newTime });
+        setShowRecurrenceModal(true);
+    } else {
+        onBookingUpdate(draggedBooking, targetDate, newTime, 'SINGLE');
+    }
+    setDraggedBooking(null);
+  };
+
+  const gridRef = useRef<HTMLDivElement>(null);
+
   const renderBookingCard = (booking: Booking) => {
     const checklist = booking.checklist;
     const completedItems = checklist?.items.filter(item => item.isCompleted).length || 0;
@@ -216,6 +338,8 @@ export function AdminCalendarView({
     return (
       <div key={booking.id} className="relative mb-1">
         <button
+          draggable={!!onBookingUpdate}
+          onDragStart={(e) => handleDragStart(e, booking)}
           onClick={() => onBookingClick(booking)}
           onMouseEnter={(e) => {
             if (hoverTimeoutRef.current) {
@@ -234,11 +358,12 @@ export function AdminCalendarView({
               setTooltipTarget(null);
             }, 200);
           }}
-          className="w-full text-left text-xs p-1.5 rounded border hover:shadow-md transition-shadow"
+          className="w-full text-left text-xs p-1.5 rounded border hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
           style={{
             backgroundColor: bookingBgColor,
             borderColor: bookingBorderColor,
             color: '#1F2937',
+            opacity: draggedBooking?.id === booking.id ? 0.5 : 1,
           }}
         >
           <div className="font-semibold truncate">
@@ -382,11 +507,13 @@ export function AdminCalendarView({
               return (
                 <div
                   key={index}
-                  className={`flex flex-col p-2 border rounded-lg min-h-[120px] ${
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDropOnDay(e, day)}
+                  className={`flex flex-col p-2 border rounded-lg min-h-[120px] transition-colors ${
                     isCurrentMonthDay
                       ? "bg-white border-gray-200"
                       : "bg-gray-50 border-gray-100"
-                  } ${isTodayDay ? "ring-2 ring-primary" : ""}`}
+                  } ${isTodayDay ? "ring-2 ring-primary" : ""} ${draggedBooking && isCurrentMonthDay ? "hover:bg-blue-50" : ""}`}
                 >
                   <div
                     className={`text-sm font-semibold mb-2 ${
@@ -419,7 +546,12 @@ export function AdminCalendarView({
             </div>
 
             {/* Main Grid */}
-            <div className={`flex-1 grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} relative min-h-[1020px]`}>
+            <div
+                ref={gridRef}
+                className={`flex-1 grid ${view === 'day' ? 'grid-cols-1' : 'grid-cols-7'} relative min-h-[1020px]`}
+                onDragOver={handleDragOver}
+                onDrop={handleDropOnGrid}
+            >
               {/* Horizontal Hour Lines Background */}
               <div className="absolute inset-0 z-0 pointer-events-none">
                 {Array.from({ length: 17 }).map((_, i) => (
@@ -479,7 +611,7 @@ export function AdminCalendarView({
                 const totalLanes = lanes.length;
 
                 return (
-                  <div key={dayIndex} className="relative border-l border-gray-100 first:border-l-0 h-full">
+                  <div key={dayIndex} className="relative border-l border-gray-100 first:border-l-0 h-full hover:bg-blue-50/30 transition-colors">
                      {renderedBookings.map((booking) => {
                        // Constants
                        const GRID_START_HOUR = 7;
@@ -497,15 +629,18 @@ export function AdminCalendarView({
 
                        return (
                          <div
+                           draggable={!!onBookingUpdate}
+                           onDragStart={(e) => handleDragStart(e, booking)}
                            key={booking.id}
-                           className="absolute rounded border border-white/50 shadow-sm text-[10px] leading-tight overflow-hidden hover:z-30 hover:shadow-lg transition-all cursor-pointer"
+                           className="absolute rounded border border-white/50 shadow-sm text-[10px] leading-tight overflow-hidden hover:z-30 hover:shadow-lg transition-all cursor-grab active:cursor-grabbing"
                            style={{
                              top: `${top}px`,
                              height: `${height}px`,
                              left: `${leftPercent}%`,
                              width: `${widthPercent}%`,
                              backgroundColor: bookingColor,
-                             color: '#FFFFFF'
+                             color: '#FFFFFF',
+                             opacity: draggedBooking?.id === booking.id ? 0.5 : 1,
                            }}
                            onClick={(e) => {
                              e.stopPropagation();
@@ -520,7 +655,7 @@ export function AdminCalendarView({
                              setTooltipTarget(null);
                            }}
                          >
-                           <div className="p-1 h-full flex flex-col">
+                           <div className="p-1 h-full flex flex-col pointer-events-none">
                              <div className="font-bold truncate">{formatTime12Hour(booking.scheduledTime)}</div>
                              <div className="truncate font-medium">{booking.client.firstName} {booking.client.lastName}</div>
                              {booking.cleaner && <div className="truncate opacity-90 text-[9px]">{booking.cleaner.firstName}</div>}
@@ -537,12 +672,59 @@ export function AdminCalendarView({
       </div>
 
       {/* Booking Tooltip */}
-      {hoveredBooking && tooltipTarget && (
+      {hoveredBooking && tooltipTarget && !draggedBooking && (
         <BookingTooltip
           booking={hoveredBooking}
           targetElement={tooltipTarget}
           visible={true}
         />
+      )}
+
+      {/* Recurrence Confirmation Modal */}
+      {showRecurrenceModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1005] p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Update Recurring Booking?</h3>
+            <p className="text-gray-600 mb-6">
+              This is a recurring booking. Do you want to move only this booking, or this and all future bookings in the series?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  if (pendingDrop && onBookingUpdate) {
+                    onBookingUpdate(pendingDrop.booking, pendingDrop.newDate, pendingDrop.newTime, 'SINGLE');
+                  }
+                  setShowRecurrenceModal(false);
+                  setPendingDrop(null);
+                }}
+                className="w-full px-4 py-2 border border-primary text-primary font-medium rounded-lg hover:bg-primary/5 transition-colors"
+              >
+                This booking only
+              </button>
+              <button
+                onClick={() => {
+                  if (pendingDrop && onBookingUpdate) {
+                    onBookingUpdate(pendingDrop.booking, pendingDrop.newDate, pendingDrop.newTime, 'FUTURE');
+                  }
+                  setShowRecurrenceModal(false);
+                  setPendingDrop(null);
+                }}
+                className="w-full px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors"
+              >
+                This and future bookings
+              </button>
+              <button
+                onClick={() => {
+                  setShowRecurrenceModal(false);
+                  setPendingDrop(null);
+                }}
+                className="w-full px-4 py-2 text-gray-500 font-medium rounded-lg hover:bg-gray-100 transition-colors mt-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

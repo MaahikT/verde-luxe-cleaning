@@ -6,6 +6,10 @@ import { config } from "vinxi/plugins/config";
 import { env } from "./src/server/env";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { consoleForwardPlugin } from "./vite-console-forward-plugin";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default createApp({
   server: {
@@ -37,6 +41,18 @@ export default createApp({
         }),
         tsConfigPaths({
           projects: ["./tsconfig.json"],
+        }),
+        config("resolve", {
+          // @ts-ignore
+          resolve: {
+            alias: {
+              "react/jsx-runtime": resolve(__dirname, "node_modules/react/jsx-runtime.js"),
+              "react/jsx-dev-runtime": resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
+              react: resolve(__dirname, "node_modules/react/index.js"),
+              "react-dom/client": resolve(__dirname, "node_modules/react-dom/client.js"),
+              "react-dom": resolve(__dirname, "node_modules/react-dom/index.js"),
+            },
+          },
         }),
       ],
     },
@@ -76,6 +92,18 @@ export default createApp({
         }),
         tsConfigPaths({
           projects: ["./tsconfig.json"],
+        }),
+        config("resolve", {
+          // @ts-ignore
+          resolve: {
+            alias: {
+              "react/jsx-runtime": resolve(__dirname, "node_modules/react/jsx-runtime.js"),
+              "react/jsx-dev-runtime": resolve(__dirname, "node_modules/react/jsx-dev-runtime.js"),
+              react: resolve(__dirname, "node_modules/react/index.js"),
+              "react-dom/client": resolve(__dirname, "node_modules/react-dom/client.js"),
+              "react-dom": resolve(__dirname, "node_modules/react-dom/index.js"),
+            },
+          },
         }),
         TanStackRouterVite({
           target: "react",

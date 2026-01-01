@@ -283,7 +283,8 @@ function AdminPortalPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { token, user, clearAuth } = useAuthStore();
-  const { view: activeView, action, clientId, cleanerId, bookingId } = Route.useSearch();
+  const searchParams = Route.useSearch();
+  const { view: activeView, action, clientId, cleanerId, bookingId } = searchParams;
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   // Auto-open booking form if action is create-booking
@@ -583,10 +584,13 @@ function AdminPortalPage() {
   const handleCloseBookingForm = () => {
     setShowBookingForm(false);
     setSelectedBooking(undefined);
+    // Explicitly construct the new search params from current state
+    const { action, clientId, cleanerId, bookingId, ...rest } = searchParams;
     navigate({
-      search: (prev: any) => {
-         const { action, clientId, cleanerId, bookingId, ...rest } = prev;
-         return { ...rest, view: activeView || "dashboard" };
+      to: "/admin-portal",
+      search: {
+        ...rest,
+        view: activeView || "dashboard"
       },
       replace: true,
     });
@@ -640,6 +644,22 @@ function AdminPortalPage() {
       authToken: token || "",
       ...data,
       scheduledDate,
+    });
+  };
+
+  const handleBookingUpdate = (booking: Booking, newDate: Date, newTime?: string, updateMode?: 'SINGLE' | 'FUTURE') => {
+    // Format date as YYYY-MM-DDT12:00:00.000Z to ensure it stays on the correct day regardless of timezone
+    const year = newDate.getFullYear();
+    const month = (newDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = newDate.getDate().toString().padStart(2, '0');
+    const scheduledDate = `${year}-${month}-${day}T12:00:00.000Z`;
+
+    updateBookingMutation.mutate({
+      authToken: token || "",
+      bookingId: booking.id,
+      scheduledDate,
+      scheduledTime: newTime || booking.scheduledTime,
+      updateMode: updateMode || 'SINGLE',
     });
   };
 
@@ -792,7 +812,7 @@ function AdminPortalPage() {
         lastName: data.lastName || undefined,
         phone: data.phone || undefined,
         color: data.color === "" ? null : (data.color || null),
-        adminPermissions: data.adminPermissions,
+        // adminPermissions: data.adminPermissions, // Not supported in createUser yet
       });
     }
   };
@@ -916,7 +936,7 @@ function AdminPortalPage() {
                       <PendingChargesCard />
                       <UpcomingJobsCard
                         jobs={monthlyMetricsQuery.data?.upcomingJobs || []}
-                        onJobClick={handleBookingClick}
+                        onJobClick={handleBookingClick as any}
                       />
                     </div>
 
@@ -962,6 +982,7 @@ function AdminPortalPage() {
                     onBookingClick={handleBookingClick}
                     onCreateBooking={handleCreateBooking}
                     onViewChecklist={handleViewBookingChecklist}
+                    onBookingUpdate={handleBookingUpdate}
                   />
                   <ProviderListFloating
                     providers={usersQuery.data?.users.filter(u => u.role === 'CLEANER') || []}
@@ -1800,11 +1821,10 @@ function AdminPortalPage() {
             setSelectedBooking(undefined);
             // Clear bookingId from URL if present
             if (bookingId) {
+              const { bookingId: _, ...rest } = Route.useSearch();
               navigate({
-                search: (prev: any) => {
-                  const { bookingId, ...rest } = prev;
-                  return rest;
-                },
+                to: "/admin-portal",
+                search: rest,
                 replace: true
               });
             }

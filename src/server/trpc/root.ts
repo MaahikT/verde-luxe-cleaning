@@ -124,7 +124,7 @@ export const appRouter = createTRPCRouter({
   updateBookingChecklistItem,
   // Pricing procedures
   getPricingRules,
-  deleteLeadAdmin,
+
   createPricingRule,
   updatePricingRule,
   deletePricingRule,

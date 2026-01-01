@@ -8,7 +8,7 @@ import { baseProcedure } from "~/server/trpc/main";
 import { env } from "~/server/env";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-12-18.acacia",
+  apiVersion: "2025-12-15.clover",
 });
 
 // Helper function to sanitize phone numbers (remove all non-numeric characters)
@@ -102,7 +102,7 @@ export const createStripeCustomer = baseProcedure
         } else {
           // Create new client with generated password
           const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-          generatedPassword = Array.from({ length: 12 }, () => 
+          generatedPassword = Array.from({ length: 12 }, () =>
             chars.charAt(Math.floor(Math.random() * chars.length))
           ).join('');
 

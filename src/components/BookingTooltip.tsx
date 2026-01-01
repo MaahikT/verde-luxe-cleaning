@@ -26,6 +26,7 @@ interface Booking {
     email: string;
     phone: string | null;
     color?: string | null;
+    role?: string;
   } | null;
 }
 
@@ -36,8 +37,6 @@ interface BookingTooltipProps {
 }
 
 export function BookingTooltip({ booking, targetElement, visible }: BookingTooltipProps) {
-  if (!visible) return null;
-
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
@@ -91,10 +90,12 @@ export function BookingTooltip({ booking, targetElement, visible }: BookingToolt
     setPosition({ top, left });
   }, [targetElement, visible]);
 
+  const isUnassigned = !booking.cleaner || (booking.cleaner.role !== 'CLEANER');
+
   const clientName = `${booking.client.firstName || ''} ${booking.client.lastName || ''}`.trim() || booking.client.email;
-  const cleanerName = booking.cleaner
+  const cleanerName = !isUnassigned && booking.cleaner
     ? `${booking.cleaner.firstName || ''} ${booking.cleaner.lastName || ''}`.trim() || booking.cleaner.email
-    : 'Not assigned';
+    : 'Unassigned';
 
   const formattedDate = new Date(booking.scheduledDate).toLocaleDateString('en-US', {
     weekday: 'short',
@@ -102,6 +103,8 @@ export function BookingTooltip({ booking, targetElement, visible }: BookingToolt
     day: 'numeric',
     year: 'numeric'
   });
+
+  if (!visible) return null;
 
   return (
     <div
@@ -152,16 +155,18 @@ export function BookingTooltip({ booking, targetElement, visible }: BookingToolt
             <div
               className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{
-                backgroundColor: booking.cleaner?.color ? `${booking.cleaner.color}20` : '#5e870d1A',
-                color: booking.cleaner?.color || '#5e870d'
+                backgroundColor: !isUnassigned && booking.cleaner?.color ? `${booking.cleaner.color}20` : '#F3F4F6',
+                color: !isUnassigned && booking.cleaner?.color || '#9CA3AF'
               }}
             >
               <User className="w-3.5 h-3.5" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-gray-500 mb-0.5">Assigned Cleaner</p>
-              <p className="font-medium text-gray-900 text-sm">{cleanerName}</p>
-              {booking.cleaner?.phone && (
+              <p className={`text-sm ${!isUnassigned ? 'font-medium text-gray-900' : 'text-gray-400 italic'}`}>
+                {cleanerName}
+              </p>
+              {!isUnassigned && booking.cleaner?.phone && (
                 <a
                   href={`tel:${booking.cleaner.phone}`}
                   className="text-primary hover:text-primary-dark text-xs flex items-center gap-1 mt-0.5 pointer-events-auto"

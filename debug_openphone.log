@@ -53,3 +53,140 @@
 [2025-12-31T07:07:14.828Z] [AdminBooking] Checking OpenPhone sync for Client ID: 29
 [2025-12-31T07:07:14.831Z] [AdminBooking] Client found: test.booking.implicit.7272@example.com, Phone: 5555557272, existingID: 69531a6b0a6aceaaf0ecdab3
 [2025-12-31T07:07:14.833Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T19:14:53.930Z] [AdminLead] Checking OpenPhone sync for Lead ID: 18
+[2025-12-31T19:14:53.931Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2025-12-31T19:14:53.931Z] [OpenPhone] Attempting to create contact. Name: Noah Kirk, Phone: +12489461721 (Original: 2489461721)
+[2025-12-31T19:14:54.431Z] [OpenPhone] Search returned 10 results, but none matched +12489461721 exactly.
+[2025-12-31T19:14:54.729Z] [OpenPhone] Response Status: 201
+[2025-12-31T19:14:54.730Z] [OpenPhone] Success! Contact ID: 6955762e7c6995f3e75d8351
+[2025-12-31T19:14:54.731Z] [AdminLead] OpenPhone Service returned ID: 6955762e7c6995f3e75d8351
+[2025-12-31T19:14:54.741Z] [AdminLead] Updated Lead with OpenPhone ID.
+[2025-12-31T21:12:05.880Z] [AdminLead] Checking OpenPhone sync for Lead ID: 1
+[2025-12-31T21:12:05.892Z] [AdminLead] Linked User ID: 3, Existing OpenPhone ID: null
+[2025-12-31T21:12:05.892Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2025-12-31T21:12:05.893Z] [OpenPhone] Attempting to create contact. Name: John Doe, Phone: +5550123 (Original: 555-0123)
+[2025-12-31T21:12:06.193Z] [OpenPhone] Search returned 10 results, but none matched +5550123 exactly.
+[2025-12-31T21:12:06.417Z] [OpenPhone] Response Status: 201
+[2025-12-31T21:12:06.418Z] [OpenPhone] Success! Contact ID: 695591a6e30173a8eb2db690
+[2025-12-31T21:12:06.419Z] [AdminLead] OpenPhone Service returned ID: 695591a6e30173a8eb2db690
+[2025-12-31T21:12:06.435Z] [AdminLead] Updated User and Lead with OpenPhone ID.
+[2025-12-31T22:33:30.286Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2025-12-31T22:33:30.499Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2025-12-31T22:33:30.502Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2025-12-31T22:33:30.504Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T22:45:48.428Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2025-12-31T22:45:48.627Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2025-12-31T22:45:48.630Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2025-12-31T22:45:48.631Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T23:30:18.659Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2025-12-31T23:30:19.866Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2025-12-31T23:30:19.869Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2025-12-31T23:30:19.870Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2025-12-31T23:31:07.350Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2025-12-31T23:31:07.560Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2025-12-31T23:31:07.564Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2025-12-31T23:31:07.564Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:02:31.828Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:02:32.829Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:02:32.833Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:02:32.834Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:07:00.276Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:07:01.255Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:07:01.258Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:07:01.260Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:12:09.848Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:12:10.905Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:12:10.907Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:12:10.907Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:32:40.738Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:32:41.764Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:32:41.767Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:32:41.768Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:33:41.809Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:33:41.842Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:33:41.844Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:33:41.844Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:38:55.459Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:38:55.491Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:38:55.493Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:38:55.493Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:42:38.429Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:42:38.462Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:42:38.463Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:42:38.463Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:44:23.850Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:44:23.889Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:44:23.894Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:44:23.894Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:45:40.243Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T00:45:41.205Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T00:45:41.210Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T00:45:41.210Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T00:58:33.775Z] [AdminBookingStart] Mutation started. ClientId: 9
+[2026-01-01T00:58:33.793Z] [AdminBooking] Checking OpenPhone sync for Client ID: 9
+[2026-01-01T00:58:33.794Z] [AdminBooking] Client found: repro_freq@test.com, Phone: null, existingID: null
+[2026-01-01T00:58:33.794Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:00:14.460Z] [AdminBookingStart] Mutation started. ClientId: 10
+[2026-01-01T01:00:14.474Z] [AdminBooking] Checking OpenPhone sync for Client ID: 10
+[2026-01-01T01:00:14.475Z] [AdminBooking] Client found: repro_freq@test.com, Phone: null, existingID: null
+[2026-01-01T01:00:14.475Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:00:23.135Z] [AdminBookingStart] Mutation started. ClientId: 11
+[2026-01-01T01:00:23.146Z] [AdminBooking] Checking OpenPhone sync for Client ID: 11
+[2026-01-01T01:00:23.146Z] [AdminBooking] Client found: repro_freq@test.com, Phone: null, existingID: null
+[2026-01-01T01:00:23.146Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:03:00.853Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T01:03:01.901Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T01:03:01.905Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T01:03:01.906Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:05:48.877Z] [AdminBookingStart] Mutation started. ClientId: 12
+[2026-01-01T01:05:48.891Z] [AdminBooking] Checking OpenPhone sync for Client ID: 12
+[2026-01-01T01:05:48.894Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:05:48.894Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:05:56.647Z] [AdminBookingStart] Mutation started. ClientId: 13
+[2026-01-01T01:05:56.658Z] [AdminBooking] Checking OpenPhone sync for Client ID: 13
+[2026-01-01T01:05:56.659Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:05:56.659Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:06:49.227Z] [AdminBookingStart] Mutation started. ClientId: 14
+[2026-01-01T01:06:49.243Z] [AdminBooking] Checking OpenPhone sync for Client ID: 14
+[2026-01-01T01:06:49.244Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:06:49.244Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:07:00.087Z] [AdminBookingStart] Mutation started. ClientId: 15
+[2026-01-01T01:07:00.100Z] [AdminBooking] Checking OpenPhone sync for Client ID: 15
+[2026-01-01T01:07:00.102Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:07:00.102Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:07:09.452Z] [AdminBookingStart] Mutation started. ClientId: 16
+[2026-01-01T01:07:09.458Z] [AdminBooking] Checking OpenPhone sync for Client ID: 16
+[2026-01-01T01:07:09.459Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:07:09.459Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:08:14.660Z] [AdminBookingStart] Mutation started. ClientId: 17
+[2026-01-01T01:08:14.674Z] [AdminBooking] Checking OpenPhone sync for Client ID: 17
+[2026-01-01T01:08:14.675Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:08:14.675Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:09:14.062Z] [AdminBookingStart] Mutation started. ClientId: 18
+[2026-01-01T01:09:14.070Z] [AdminBooking] Checking OpenPhone sync for Client ID: 18
+[2026-01-01T01:09:14.070Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:09:14.070Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:09:24.410Z] [AdminBookingStart] Mutation started. ClientId: 19
+[2026-01-01T01:09:24.424Z] [AdminBooking] Checking OpenPhone sync for Client ID: 19
+[2026-01-01T01:09:24.425Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:09:24.425Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:13:03.211Z] [AdminBookingStart] Mutation started. ClientId: 20
+[2026-01-01T01:13:03.225Z] [AdminBooking] Checking OpenPhone sync for Client ID: 20
+[2026-01-01T01:13:03.225Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:13:03.225Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:15:07.792Z] [AdminBookingStart] Mutation started. ClientId: 21
+[2026-01-01T01:15:07.804Z] [AdminBooking] Checking OpenPhone sync for Client ID: 21
+[2026-01-01T01:15:07.805Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:15:07.805Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:16:33.505Z] [AdminBookingStart] Mutation started. ClientId: 22
+[2026-01-01T01:16:33.515Z] [AdminBooking] Checking OpenPhone sync for Client ID: 22
+[2026-01-01T01:16:33.515Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:16:33.515Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:18:03.385Z] [AdminBookingStart] Mutation started. ClientId: 23
+[2026-01-01T01:18:03.400Z] [AdminBooking] Checking OpenPhone sync for Client ID: 23
+[2026-01-01T01:18:03.401Z] [AdminBooking] Client found: repro_double@test.com, Phone: null, existingID: null
+[2026-01-01T01:18:03.401Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T01:51:47.035Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-01T01:51:48.023Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-01T01:51:48.031Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-01T01:51:48.032Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.

@@ -448,10 +448,8 @@ export const createBookingAdmin = baseProcedure
 
       // Generate recurring bookings if frequency is set
       if (input.serviceFrequency && ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(input.serviceFrequency)) {
-        // Run in background to not block response
-        generateFutureBookings(booking, input.serviceFrequency).catch(err => {
-            console.error("Error generating recurring bookings:", err);
-        });
+        // Await generation to ensure data consistency
+        await generateFutureBookings(booking, input.serviceFrequency);
       }
 
       return {

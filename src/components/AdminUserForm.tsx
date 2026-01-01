@@ -29,8 +29,8 @@ interface User {
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
-  temporaryPassword: string | null;
-  hasResetPassword: boolean;
+  temporaryPassword?: string | null;
+  hasResetPassword?: boolean;
   color: string | null;
   adminPermissions?: Record<string, boolean> | null;
 }
@@ -50,7 +50,7 @@ export function AdminUserForm({
 }: AdminUserFormProps) {
   const isEditMode = !!user;
   const { user: currentUser } = useAuthStore();
-  
+
   // Define available permissions with descriptions
   const availablePermissions = [
     { key: "manage_bookings", label: "Manage Bookings", description: "Create, edit, and delete bookings" },
@@ -62,12 +62,12 @@ export function AdminUserForm({
     { key: "view_reports", label: "View Reports", description: "Access revenue reports and statistics" },
     { key: "manage_time_off_requests", label: "Manage Time-Off Requests", description: "Approve/reject cleaner time-off requests" },
   ];
-  
+
   // Get current user's permissions if they're an admin
-  const currentUserPermissions = currentUser?.role === "ADMIN" 
+  const currentUserPermissions = currentUser?.role === "ADMIN"
     ? (currentUser.adminPermissions as Record<string, boolean> | null)
     : null;
-  
+
   const {
     register,
     handleSubmit,
@@ -234,7 +234,7 @@ export function AdminUserForm({
                 Provider Color
                 <span className="text-gray-500 text-xs ml-1">(optional - for calendar color coding)</span>
               </label>
-              
+
               {/* Main color picker - large and prominent */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-shrink-0">
@@ -246,7 +246,7 @@ export function AdminUserForm({
                     title="Pick a color"
                   />
                 </div>
-                
+
                 <div className="flex-1 w-full">
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Or enter hex code:
@@ -262,9 +262,9 @@ export function AdminUserForm({
                   )}
                 </div>
               </div>
-              
+
               <p className="text-xs text-gray-600 mt-3">
-                This color will be used to identify this provider's bookings on the calendar. 
+                This color will be used to identify this provider's bookings on the calendar.
                 Click the color square to open the color picker, or type a hex code directly.
               </p>
             </div>
@@ -278,7 +278,7 @@ export function AdminUserForm({
                     {roleValue === "OWNER" ? "Owner Permissions" : "Admin Permissions"}
                   </h3>
                 </div>
-                
+
                 {roleValue === "OWNER" ? (
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                     <div className="flex items-start gap-3">
@@ -296,17 +296,17 @@ export function AdminUserForm({
                 ) : (
                   <>
                     <p className="text-sm text-gray-600 mb-4">
-                      Select the permissions this admin should have. 
+                      Select the permissions this admin should have.
                       {currentUser?.role === "ADMIN" && " You can only grant permissions that you have yourself."}
                     </p>
-                    
+
                     <div className="space-y-3">
                       {availablePermissions.map((permission) => {
                         const isChecked = adminPermissionsValue[permission.key] === true;
-                        const isDisabled = currentUser?.role === "ADMIN" && 
-                          currentUserPermissions && 
+                        const isDisabled = currentUser?.role === "ADMIN" &&
+                          currentUserPermissions &&
                           !currentUserPermissions[permission.key];
-                        
+
                         return (
                           <label
                             key={permission.key}
@@ -318,8 +318,8 @@ export function AdminUserForm({
                           >
                             <input
                               type="checkbox"
-                              checked={isChecked}
-                              disabled={isDisabled}
+                              checked={isChecked === true}
+                              disabled={!!isDisabled}
                               onChange={(e) => {
                                 const newPermissions = { ...adminPermissionsValue };
                                 newPermissions[permission.key] = e.target.checked;
@@ -344,7 +344,7 @@ export function AdminUserForm({
                         );
                       })}
                     </div>
-                    
+
                     {Object.values(adminPermissionsValue).filter(Boolean).length === 0 && (
                       <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                         <p className="text-sm text-yellow-800">
@@ -374,7 +374,7 @@ export function AdminUserForm({
                   <p className="mt-1 text-sm text-red-600">{errors.temporaryPassword.message}</p>
                 )}
                 <p className="text-xs text-gray-600 mt-2">
-                  This temporary password allows users to reset their main password via "Forgot Password". 
+                  This temporary password allows users to reset their main password via "Forgot Password".
                   If you set or change this, the user will be able to use it for password recovery.
                 </p>
                 {user?.temporaryPassword && (
