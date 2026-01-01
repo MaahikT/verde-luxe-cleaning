@@ -94,6 +94,18 @@ export const getCustomerDetailsAdmin = baseProcedure
               phone: true,
             },
           },
+          payments: {
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              createdAt: true,
+              description: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
         },
         orderBy: {
           scheduledDate: "desc",
@@ -121,6 +133,18 @@ export const getCustomerDetailsAdmin = baseProcedure
               lastName: true,
               email: true,
               phone: true,
+            },
+          },
+          payments: {
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              createdAt: true,
+              description: true,
+            },
+            orderBy: {
+              createdAt: "desc",
             },
           },
         },

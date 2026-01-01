@@ -126,6 +126,18 @@ export const getAllBookingsAdmin = baseProcedure
               },
             },
           },
+          payments: {
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              createdAt: true,
+              description: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
         },
         orderBy: {
           scheduledDate: "asc",

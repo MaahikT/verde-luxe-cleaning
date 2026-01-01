@@ -562,9 +562,174 @@ export const updateBookingAdmin = baseProcedure
         }
       }
 
+      // Handle price adjustments for ALREADY CAPTURED payments (Refunds or Extra Charges)
+      // This handles the case where a booking was completed/charged, and then the admin changes the price.
+      if (!input.replacePaymentMethod && input.finalPrice !== undefined && input.finalPrice !== null && existingBooking.finalPrice !== input.finalPrice) {
+          // Check if there is a successful CAPTURED payment for this booking
+          const lastCapturedPayment = await db.payment.findFirst({
+            where: {
+              bookingId: input.bookingId,
+              status: "succeeded",
+              isCaptured: true
+            },
+            orderBy: { createdAt: "desc" }
+          });
 
+          if (lastCapturedPayment) {
+            // Calculate TRUE Net Captured Amount (Charges - Refunds)
+            // We must fetch ALL captured payments for this booking to know the current balance
+            const allCaptured = await db.payment.findMany({
+                where: {
+                    bookingId: input.bookingId,
+                    isCaptured: true,
+                    status: 'succeeded'
+                }
+            });
+            const netCapturedAmount = allCaptured.reduce((sum, p) => sum + p.amount, 0);
 
-      return { booking };
+            const newPrice = input.finalPrice;
+            const diff = newPrice - netCapturedAmount;
+
+            // Log for debugging
+            console.log(`[UpdateBooking] Price Sync Check: New Price: ${newPrice}, Net Captured: ${netCapturedAmount}, Diff: ${diff}`);
+
+            const diffCents = Math.round(diff * 100);
+
+            if (diff < 0) {
+              // --- REFUND LOGIC ---
+              const refundAmount = Math.abs(diff);
+              const refundAmountCents = Math.abs(diffCents);
+
+              console.log(`[UpdateBooking] Price decreased by $${refundAmount}. Issuing refund.`);
+
+              if (!lastCapturedPayment.stripePaymentIntentId) {
+                 console.error("Cannot issue auto-refund: Last payment has no Stripe Intent ID.");
+                 // We don't throw here to avoid blocking the update, but we log error.
+              } else {
+                 try {
+                     const refund = await stripe.refunds.create({
+                         payment_intent: lastCapturedPayment.stripePaymentIntentId,
+                         amount: refundAmountCents,
+                         reason: 'requested_by_customer', // Or 'duplicate' / generally assumes admin correction
+                         metadata: {
+                             bookingId: input.bookingId.toString(),
+                             reason: "Admin updated booking price (decrease)"
+                         }
+                     });
+
+                     // Create negative payment record to reflect refund
+                     await db.payment.create({
+                         data: {
+                             bookingId: input.bookingId,
+                             cleanerId: existingBooking.cleanerId,
+                             amount: -refundAmount, // Negative amount for refund
+                             description: `Refund for Booking #${input.bookingId} - Price Adjustment`,
+                             stripePaymentIntentId: lastCapturedPayment.stripePaymentIntentId, // Link to original intent
+                             status: "succeeded", // Refunds are "succeeded" in our ledger if processed
+                             isCaptured: true,
+                             paidAt: new Date()
+                         }
+                     });
+
+                 } catch (err) {
+                     console.error("Failed to issue auto-refund:", err);
+                     throw new TRPCError({
+                         code: "INTERNAL_SERVER_ERROR",
+                         message: `Failed to issue refund: ${err instanceof Error ? err.message : "Unknown error"}`
+                     });
+                 }
+              }
+
+            } else if (diff > 0) {
+              // --- EXTRA CHARGE LOGIC ---
+              const chargeAmount = diff;
+              const chargeAmountCents = diffCents;
+
+              console.log(`[UpdateBooking] Price increased by $${chargeAmount}. Issuing extra charge.`);
+
+              try {
+                  // We need the customer ID and a payment method.
+                  const client = await db.user.findUnique({
+                      where: { id: existingBooking.clientId },
+                      select: { stripeCustomerId: true }
+                  });
+
+                  if (!client?.stripeCustomerId) {
+                      throw new Error("Client has no Stripe Customer ID.");
+                  }
+
+                  let paymentMethodId = lastCapturedPayment.stripePaymentMethodId;
+
+                  // If missing in DB, try to retrieve from Stripe Intent
+                  if (!paymentMethodId && lastCapturedPayment.stripePaymentIntentId) {
+                       try {
+                           const pi = await stripe.paymentIntents.retrieve(lastCapturedPayment.stripePaymentIntentId);
+                           if (typeof pi.payment_method === 'string') {
+                               paymentMethodId = pi.payment_method;
+                           } else if (pi.payment_method?.id) {
+                               paymentMethodId = pi.payment_method.id;
+                           }
+                       } catch (e) {
+                           console.warn("Failed to retrieve Payment Intent for method extraction:", e);
+                       }
+                  }
+
+                  // If still missing, try to find a valid SavedPaymentMethod for this user
+                  if (!paymentMethodId) {
+                      const defaultMethod = await db.savedPaymentMethod.findFirst({
+                          where: { userId: existingBooking.clientId },
+                          orderBy: { isDefault: 'desc' } // Prefer default
+                      });
+                      if (defaultMethod) {
+                          paymentMethodId = defaultMethod.stripePaymentMethodId;
+                      }
+                  }
+
+                  if (!paymentMethodId) {
+                      throw new Error("No valid Payment Method found (checked Transaction, Stripe PI, and Saved Methods). Cannot process additional charge.");
+                  }
+
+                  // Charge the difference
+                  const paymentIntent = await stripe.paymentIntents.create({
+                      amount: chargeAmountCents,
+                      currency: "usd",
+                      customer: client.stripeCustomerId,
+                      payment_method: paymentMethodId, // Reuse method
+                      capture_method: "automatic", // Capture immediately
+                      confirm: true,
+                      off_session: true, // Admin initiated
+                      description: `Additional charge for Booking #${input.bookingId} - Price Adjustment`,
+                      metadata: {
+                          bookingId: input.bookingId.toString(),
+                          reason: "Admin updated booking price (increase)"
+                      }
+                  });
+
+                  // Create positive payment record
+                  await db.payment.create({
+                         data: {
+                             bookingId: input.bookingId,
+                             cleanerId: existingBooking.cleanerId,
+                             amount: chargeAmount,
+                             description: `Additional Charge for Booking #${input.bookingId} - Price adjustment`,
+                             stripePaymentIntentId: paymentIntent.id,
+                             stripePaymentMethodId: paymentMethodId,
+                             status: paymentIntent.status,
+                             isCaptured: true,
+                             paidAt: new Date()
+                         }
+                  });
+
+              } catch (err) {
+                  console.error("Failed to issue extra charge:", err);
+                  throw new TRPCError({
+                      code: "INTERNAL_SERVER_ERROR",
+                      message: `Failed to charge difference: ${err instanceof Error ? err.message : "Unknown error"}`
+                  });
+              }
+            }
+          }
+      }
     } catch (error) {
       if (error instanceof TRPCError) {
         throw error;

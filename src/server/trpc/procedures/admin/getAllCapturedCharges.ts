@@ -122,39 +122,42 @@ export const getAllCapturedCharges = baseProcedure
         ? payments.filter(p => p.booking !== null)
         : payments;
 
-      // Apply date filters if provided (filter by payment date)
-      let finalPayments = filteredPayments;
-      if (input.startDate || input.endDate) {
-        const EST_OFFSET = 5;
+      // Apply date filters to identify RELEVANT bookings
+      let relevantBookingIds = new Set<number>();
 
-        // Calculate boundaries
-        let startBoundary: Date | undefined;
-        let endBoundary: Date | undefined;
+      const EST_OFFSET = 5;
+      let startBoundary: Date | undefined;
+      let endBoundary: Date | undefined;
 
-        if (input.startDate) {
-          startBoundary = new Date(input.startDate);
-          startBoundary.setUTCHours(EST_OFFSET, 0, 0, 0);
-        }
-
-        if (input.endDate) {
-          endBoundary = new Date(input.endDate);
-          endBoundary.setDate(endBoundary.getDate() + 1);
-          endBoundary.setUTCHours(EST_OFFSET - 1, 59, 59, 999);
-        }
-
-        finalPayments = filteredPayments.filter((payment) => {
-          if (!payment.paidAt) return false;
-          const paidDate = new Date(payment.paidAt);
-
-          if (startBoundary && paidDate < startBoundary) {
-            return false;
-          }
-          if (endBoundary && paidDate > endBoundary) {
-            return false;
-          }
-          return true;
-        });
+      if (input.startDate) {
+        startBoundary = new Date(input.startDate);
+        startBoundary.setUTCHours(EST_OFFSET, 0, 0, 0);
       }
+      if (input.endDate) {
+        endBoundary = new Date(input.endDate);
+        endBoundary.setDate(endBoundary.getDate() + 1);
+        endBoundary.setUTCHours(EST_OFFSET - 1, 59, 59, 999);
+      }
+
+      // If no date filter, all bookings in filteredPayments are relevant
+      if (!input.startDate && !input.endDate) {
+         return { payments: filteredPayments };
+      }
+
+      // Find bookings that have activity within the date range
+      filteredPayments.forEach((payment) => {
+          if (!payment.bookingId) return;
+          if (!payment.paidAt) return;
+
+          const paidDate = new Date(payment.paidAt);
+          if (startBoundary && paidDate < startBoundary) return;
+          if (endBoundary && paidDate > endBoundary) return;
+
+          relevantBookingIds.add(payment.bookingId);
+      });
+
+      // Return ALL payments for those bookings (to ensure Net Amount and History are correct)
+      const finalPayments = payments.filter(p => relevantBookingIds.has(p.bookingId));
 
       return { payments: finalPayments };
     } catch (error) {

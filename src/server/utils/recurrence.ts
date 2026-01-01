@@ -54,7 +54,10 @@ export async function generateFutureBookings(
       numberOfCleanersRequested: originalBooking.numberOfCleanersRequested,
       cleanerPaymentAmount: originalBooking.cleanerPaymentAmount,
       paymentMethod: originalBooking.paymentMethod,
-      paymentDetails: originalBooking.paymentDetails, // You might want to strip specific transaction IDs if they were one-time
+      // Strip out specific transaction IDs/Holds from the copied string
+      paymentDetails: originalBooking.paymentDetails
+        ? originalBooking.paymentDetails.replace(/ - Hold:.*$/, "").replace(/Stripe Payment Intent:.*$/, "").trim()
+        : null,
       selectedExtras: originalBooking.selectedExtras ?? undefined,
     };
 

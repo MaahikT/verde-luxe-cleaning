@@ -1,5 +1,5 @@
 import { X, User, Mail, Phone, Calendar, DollarSign, Package, CheckCircle, XCircle, Clock, MapPin, Briefcase } from "lucide-react";
-import { AdminCalendarView } from "~/components/AdminCalendarView";
+import { AdminCalendarView, type Booking } from "~/components/AdminCalendarView";
 import { formatPhoneNumber } from "~/utils/formatPhoneNumber";
 
 interface CustomerDetails {
@@ -13,37 +13,6 @@ interface CustomerDetails {
   updatedAt: string;
   temporaryPassword: string | null;
   hasResetPassword: boolean;
-}
-
-interface BookingClient {
-  id: number;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  phone: string | null;
-}
-
-interface BookingCleaner {
-  id: number;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  phone: string | null;
-}
-
-interface Booking {
-  id: number;
-  clientId: number;
-  cleanerId: number | null;
-  serviceType: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  durationHours: number | null;
-  address: string;
-  specialInstructions: string | null;
-  finalPrice: number | null;
-  client: BookingClient;
-  cleaner: BookingCleaner | null;
 }
 
 interface Statistics {

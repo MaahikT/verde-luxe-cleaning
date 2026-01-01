@@ -113,16 +113,28 @@ export const issueRefund = baseProcedure
         reason: input.reason,
       });
 
-      // Note: We're not updating the payment record status here because refunds don't change
-      // the payment intent status. In a production system, you might want to:
-      // 1. Create a separate Refund table to track refunds
-      // 2. Add a refundedAmount field to the Payment model
-      // 3. Listen to Stripe webhooks for refund status updates
+      // Calculate refund amount in dollars (negative)
+      const refundAmount = -(refund.amount / 100);
+
+      // Record the refund in our database
+      await db.payment.create({
+        data: {
+          bookingId: payment.bookingId,
+          cleanerId: payment.cleanerId,
+          amount: refundAmount,
+          description: `Refund for Payment #${payment.id} - ${input.reason?.replace(/_/g, " ") || "Manual Refund"}`,
+          stripePaymentIntentId: payment.stripePaymentIntentId,
+          stripePaymentMethodId: payment.stripePaymentMethodId,
+          status: "succeeded",
+          isCaptured: true,
+          paidAt: new Date(),
+        },
+      });
 
       return {
         success: true,
         refundId: refund.id,
-        amount: refund.amount / 100, // Convert cents to dollars
+        amount: Math.abs(refundAmount),
         status: refund.status,
         paymentIntentId: payment.stripePaymentIntentId,
       };

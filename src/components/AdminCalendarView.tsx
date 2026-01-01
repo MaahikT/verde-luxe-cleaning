@@ -48,6 +48,13 @@ export interface Booking {
       isCompleted: boolean;
     }[];
   } | null;
+  payments?: {
+    id: number;
+    status: string | null;
+    amount: number;
+    createdAt: Date;
+    description: string | null;
+  }[];
 }
 
 interface AdminCalendarViewProps {
