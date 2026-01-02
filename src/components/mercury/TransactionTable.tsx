@@ -54,7 +54,7 @@ export function TransactionTable({ accounts, categories, onTransactionClick }: T
     trpc.mercury.getTransactions.queryOptions({
       authToken: token || "",
       accountId: selectedAccount,
-      categoryId: effectiveCategoryFilter,
+      categoryId: effectiveCategoryFilter ?? undefined,
       status: effectiveStatus,
       startDate: startDate || undefined,
       endDate: endDate || undefined,

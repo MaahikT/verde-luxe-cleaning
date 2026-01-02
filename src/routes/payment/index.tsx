@@ -24,7 +24,7 @@ function PaymentPage() {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const { amount, bookingId } = Route.useSearch();
-  const { authToken } = useAuthStore();
+  const { token } = useAuthStore();
 
   const [stripePromise, setStripePromise] = useState<any>(null);
   const [clientSecret, setClientSecret] = useState<string>("");
@@ -55,10 +55,10 @@ function PaymentPage() {
 
   // Create payment intent on mount
   useEffect(() => {
-    if (authToken && !hasInitiatedPayment) {
+    if (token && !hasInitiatedPayment) {
       setHasInitiatedPayment(true);
       createPaymentIntentMutation.mutate({
-        authToken,
+        authToken: token,
         amount: Math.round(amount * 100), // Convert to cents
         currency: "usd",
         bookingId,
@@ -66,7 +66,7 @@ function PaymentPage() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authToken, amount, bookingId, hasInitiatedPayment]);
+  }, [token, amount, bookingId, hasInitiatedPayment]);
 
   const handlePaymentSuccess = () => {
     setTimeout(() => {
@@ -75,7 +75,7 @@ function PaymentPage() {
   };
 
   // Now handle conditional rendering after all hooks
-  if (!authToken) {
+  if (!token) {
     return (
       <Layout>
         <section className="pt-[140px] pb-[60px] bg-[#f8f9fa] min-h-screen">
@@ -197,7 +197,7 @@ function PaymentPage() {
                 <PaymentForm
                   amount={amount}
                   bookingId={bookingId}
-                  authToken={authToken}
+                  authToken={token || ""}
                   onSuccess={handlePaymentSuccess}
                 />
               </Elements>

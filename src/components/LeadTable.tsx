@@ -105,7 +105,7 @@ export function LeadTable({ leads, onDelete, onEdit }: LeadTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {sortedLeads.map((lead) => {
-              const statusConfig = STATUS_CONFIG[lead.status] || STATUS_CONFIG.INCOMING;
+              const statusConfig = STATUS_CONFIG[lead.status] || STATUS_CONFIG.INCOMING!;
 
               const displayName = lead.firstName && lead.lastName
                 ? `${lead.firstName} ${lead.lastName}`

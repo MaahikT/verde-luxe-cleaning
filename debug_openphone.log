@@ -190,3 +190,23 @@
 [2026-01-01T01:51:48.023Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
 [2026-01-01T01:51:48.031Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
 [2026-01-01T01:51:48.032Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-01T23:56:59.182Z] [AdminLead] Checking OpenPhone sync for Lead ID: 2
+[2026-01-01T23:56:59.183Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2026-01-01T23:56:59.184Z] [OpenPhone] Attempting to create contact. Name: Ayush K, Phone: +12483789067 (Original: 2483789067)
+[2026-01-01T23:56:59.864Z] [OpenPhone] Search returned 10 results, but none matched +12483789067 exactly.
+[2026-01-01T23:57:00.256Z] [OpenPhone] Response Status: 201
+[2026-01-01T23:57:00.257Z] [OpenPhone] Success! Contact ID: 695709cc50908c7fba980dca
+[2026-01-01T23:57:00.257Z] [AdminLead] OpenPhone Service returned ID: 695709cc50908c7fba980dca
+[2026-01-01T23:57:00.275Z] [AdminLead] Updated Lead with OpenPhone ID.
+[2026-01-02T01:35:08.286Z] [AdminLead] Checking OpenPhone sync for Lead ID: 3
+[2026-01-02T01:35:08.288Z] [AdminLead] Initiating OpenPhone Contact Creation...
+[2026-01-02T01:35:08.288Z] [OpenPhone] Attempting to create contact. Name: Farhan J, Phone: +17344313249 (Original: 7344313249)
+[2026-01-02T01:35:08.607Z] [OpenPhone] Search returned 10 results, but none matched +17344313249 exactly.
+[2026-01-02T01:35:08.830Z] [OpenPhone] Response Status: 201
+[2026-01-02T01:35:08.830Z] [OpenPhone] Success! Contact ID: 695720cc3238d508ad9fc3ad
+[2026-01-02T01:35:08.831Z] [AdminLead] OpenPhone Service returned ID: 695720cc3238d508ad9fc3ad
+[2026-01-02T01:35:08.837Z] [AdminLead] Updated Lead with OpenPhone ID.
+[2026-01-02T03:16:26.978Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-02T03:16:28.013Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-02T03:16:28.015Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-02T03:16:28.015Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.

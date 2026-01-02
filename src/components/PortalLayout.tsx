@@ -8,9 +8,9 @@ interface PortalLayoutProps {
 
 export function PortalLayout({ children, portalType }: PortalLayoutProps) {
   return (
-    <div className="min-h-screen flex bg-[#EAE9E3]">
+    <div className="min-h-screen flex bg-[#EAE9E3] w-full">
       <PortalSidebar portalType={portalType} />
-      
+
       {/* Main content area with left margin for sidebar on desktop */}
       <main className="flex-grow lg:ml-40 min-h-screen">
         {children}

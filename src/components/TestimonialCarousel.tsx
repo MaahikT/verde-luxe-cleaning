@@ -76,7 +76,8 @@ export function TestimonialCarousel() {
     const items = [];
     for (let i = 0; i < itemsToShow; i++) {
       const index = (currentIndex + i) % testimonials.length;
-      items.push({ ...testimonials[index], key: `${index}-${i}` });
+      const item = testimonials[index]!;
+      items.push({ ...item, key: `${index}-${i}` });
     }
     return items;
   };
@@ -86,8 +87,8 @@ export function TestimonialCarousel() {
   return (
     <div className="relative">
       <div className={`grid gap-5 ${
-        itemsToShow === 1 ? 'grid-cols-1' : 
-        itemsToShow === 2 ? 'grid-cols-1 sm:grid-cols-2' : 
+        itemsToShow === 1 ? 'grid-cols-1' :
+        itemsToShow === 2 ? 'grid-cols-1 sm:grid-cols-2' :
         'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
       }`}>
         {visibleItems.map((testimonial, idx) => (

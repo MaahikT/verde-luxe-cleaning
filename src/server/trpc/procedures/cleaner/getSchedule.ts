@@ -44,6 +44,7 @@ export const getSchedule = baseProcedure
         include: {
           client: {
             select: {
+              id: true,
               firstName: true,
               lastName: true,
               email: true,
@@ -84,14 +85,14 @@ export const getSchedule = baseProcedure
       const now = new Date();
       const bookingsWithDerivedStatus = bookings.map((booking) => {
         const scheduledDate = new Date(booking.scheduledDate);
-        
+
         if (scheduledDate < now && booking.status !== "CANCELLED") {
           return {
             ...booking,
             status: "COMPLETED" as const,
           };
         }
-        
+
         return booking;
       });
 

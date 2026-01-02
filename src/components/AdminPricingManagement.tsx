@@ -35,8 +35,8 @@ interface PricingRule {
   extraDescription: string | null;
   isActive: boolean;
   displayOrder: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const pricingRuleSchema = z.object({
@@ -96,8 +96,8 @@ function PricingRuleForm({ rule, onSubmit, onCancel, isSubmitting }: PricingRule
     watch,
     formState: { errors },
   } = useForm<PricingRuleFormData>({
-    resolver: zodResolver(pricingRuleSchema),
-    defaultValues: rule
+    resolver: zodResolver(pricingRuleSchema) as any,
+    defaultValues: (rule
       ? {
           name: rule.name,
           ruleType: rule.ruleType as any,
@@ -112,9 +112,11 @@ function PricingRuleForm({ rule, onSubmit, onCancel, isSubmitting }: PricingRule
           displayOrder: rule.displayOrder,
         }
       : {
+          name: "",
+          ruleType: "BASE_PRICE",
           isActive: true,
           displayOrder: 0,
-        },
+        }) as any,
   });
 
   const ruleType = watch("ruleType");
@@ -495,7 +497,7 @@ export function AdminPricingManagement() {
     if (!groupedRules[rule.ruleType]) {
       groupedRules[rule.ruleType] = [];
     }
-    groupedRules[rule.ruleType].push(rule);
+    groupedRules[rule.ruleType]!.push(rule);
   });
 
   return (
@@ -525,7 +527,7 @@ export function AdminPricingManagement() {
             <p className="font-semibold mb-1">How Pricing Works</p>
             <p>
               Pricing rules are applied automatically when creating or editing bookings. The system calculates:
-              <strong> Base Price</strong> + <strong>Square Footage</strong> + <strong>Bedrooms</strong> + 
+              <strong> Base Price</strong> + <strong>Square Footage</strong> + <strong>Bedrooms</strong> +
               <strong> Bathrooms</strong> + <strong>Extra Services</strong>. Time estimates are also calculated based on your rules.
             </p>
           </div>

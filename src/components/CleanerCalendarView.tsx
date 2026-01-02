@@ -6,7 +6,7 @@ import { BookingTooltip } from "~/components/BookingTooltip";
 interface Booking {
   id: number;
   serviceType: string;
-  scheduledDate: string;
+  scheduledDate: Date;
   scheduledTime: string;
   address: string;
   durationHours: number | null;

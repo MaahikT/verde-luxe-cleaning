@@ -35,7 +35,7 @@ interface ChecklistTemplate {
   id: number;
   name: string;
   serviceType: string;
-  createdAt: string;
+  createdAt: Date;
   items: {
     id: number;
     description: string;

@@ -27,7 +27,7 @@ async function testGroupContact() {
     const response = await fetch("https://api.openphone.com/v1/contacts", {
       method: "POST",
       headers: {
-        "Authorization": env.OPENPHONE_API_KEY,
+        "Authorization": env.OPENPHONE_API_KEY || "",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),

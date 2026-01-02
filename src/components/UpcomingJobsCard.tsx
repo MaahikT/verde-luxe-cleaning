@@ -55,77 +55,53 @@ export function UpcomingJobsCard({ jobs, onJobClick }: UpcomingJobsCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-brand-white rounded-[20px] p-5 shadow-sm h-full flex flex-col">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h3 className="text-base font-semibold text-gray-900 mb-0.5">Upcoming Jobs</h3>
-          <p className="text-xs text-gray-600">Next 2 days</p>
+          <h3 className="text-lg font-medium text-brand-black mb-0.5">Upcoming Jobs</h3>
+          <p className="text-xs text-brand-grey">Next 2 days</p>
         </div>
-        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <Calendar className="w-5 h-5 text-blue-600" />
+        <div className="w-8 h-8 bg-brand-purple rounded-lg flex items-center justify-center">
+          <Calendar className="w-4 h-4 text-brand-black" />
         </div>
       </div>
 
       {jobs.length === 0 ? (
         <div className="text-center py-6">
-          <Calendar className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600 text-xs">No jobs scheduled</p>
+          <Calendar className="w-10 h-10 text-brand-grey mx-auto mb-2 opacity-50" />
+          <p className="text-brand-grey text-xs">No jobs scheduled</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
           {jobs.map((job) => (
             <div
               key={job.id}
               onClick={() => onJobClick?.(job)}
-              className={`border border-gray-200 rounded-lg p-3 transition-all ${
-                onJobClick ? "cursor-pointer hover:border-primary hover:shadow-sm" : ""
+              className={`group flex items-center p-2.5 rounded-xl border border-transparent hover:border-brand-border hover:bg-brand-bg-light/30 transition-all ${
+                onJobClick ? "cursor-pointer" : ""
               }`}
             >
-              <div className="flex items-start justify-between gap-3 mb-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center text-white font-bold text-xs">
-                    {formatDate(job.scheduledDate).slice(0, 3)}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">
-                      {formatDate(job.scheduledDate)}
-                    </p>
-                    <p className="text-xs text-gray-600 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatTime12Hour(job.scheduledTime)}
-                    </p>
-                  </div>
-                </div>
-              </div>
+               <div className="w-10 h-10 rounded-lg bg-brand-tosca/40 flex flex-col items-center justify-center text-brand-black flex-shrink-0">
+                  <span className="text-[9px] font-bold uppercase">{formatDate(job.scheduledDate).slice(0, 3)}</span>
+                  <span className="text-[9px]">{formatTime12Hour(job.scheduledTime).split(' ')[0]}</span>
+               </div>
 
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2">
-                  <User className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-600">Client:</span>
-                  <span className="font-medium text-gray-900 truncate">
-                    {job.client.firstName} {job.client.lastName}
-                  </span>
+              <div className="ml-3 flex-1 min-w-0">
+                <h4 className="text-sm font-medium text-brand-black truncate">
+                   {job.client.firstName} {job.client.lastName}
+                </h4>
+                <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-[10px] text-brand-grey truncate">{job.serviceType}</p>
+                    {job.cleaner ? (
+                        <p className="text-[10px] text-brand-black truncate flex items-center gap-1">
+                            • {job.cleaner.firstName}
+                        </p>
+                    ) : (
+                        <p className="text-[10px] text-brand-red truncate flex items-center gap-1">
+                             • Unassigned
+                        </p>
+                    )}
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600 ml-5">Service:</span>
-                  <span className="font-medium text-gray-900 truncate">{job.serviceType}</span>
-                </div>
-
-                {job.cleaner ? (
-                  <div className="flex items-center gap-2">
-                    <User className="w-3 h-3 text-green-500 flex-shrink-0" />
-                    <span className="text-gray-600">Cleaner:</span>
-                    <span className="font-medium text-gray-900 truncate">
-                      {job.cleaner.firstName} {job.cleaner.lastName}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-yellow-700 bg-yellow-50 -mx-3 -mb-3 mt-2 p-2 rounded-b-lg">
-                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                    <span className="text-xs font-medium">No cleaner assigned</span>
-                  </div>
-                )}
               </div>
             </div>
           ))}

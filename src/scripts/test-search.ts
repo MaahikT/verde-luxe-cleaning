@@ -8,7 +8,7 @@ async function testSearch(phone: string) {
     const response = await fetch(`https://api.openphone.com/v1/contacts?${query}`, {
       method: "GET",
       headers: {
-        "Authorization": env.OPENPHONE_API_KEY,
+        "Authorization": env.OPENPHONE_API_KEY || "",
         "Content-Type": "application/json",
       }
     });

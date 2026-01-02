@@ -77,7 +77,10 @@ export const Route = createFileRoute("/cleaner-portal/")({
 
 // Helper function to parse date string in local time (avoids UTC timezone issues)
 const parseLocalDate = (dateString: string): Date => {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const parts = dateString.split('-').map(Number);
+  const year = parts[0]!;
+  const month = parts[1]!;
+  const day = parts[2]!;
   // Month is 0-indexed in JavaScript Date constructor
   return new Date(year, month - 1, day);
 };
@@ -227,8 +230,8 @@ function CleanerPortalPage() {
 
   const handleEditRequest = (request: any) => {
     // Convert ISO date strings to YYYY-MM-DD format for date inputs
-    const startDate = new Date(request.startDate).toISOString().split('T')[0];
-    const endDate = new Date(request.endDate).toISOString().split('T')[0];
+    const startDate = new Date(request.startDate).toISOString().split('T')[0] || "";
+    const endDate = new Date(request.endDate).toISOString().split('T')[0] || "";
 
     setEditingRequest({
       id: request.id,

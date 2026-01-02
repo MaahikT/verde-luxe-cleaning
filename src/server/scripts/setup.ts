@@ -14,7 +14,7 @@ function generateTemporaryPassword(length: number = 8): string {
 
 async function assignTemporaryPasswordsToClients() {
   console.log("Checking for clients without temporary passwords...");
-  
+
   // Find all CLIENT users who don't have a temporary password
   const clientsWithoutTempPassword = await db.user.findMany({
     where: {
@@ -26,10 +26,10 @@ async function assignTemporaryPasswordsToClients() {
   console.log(`Found ${clientsWithoutTempPassword.length} clients without temporary passwords`);
 
   let assignedCount = 0;
-  
+
   for (const client of clientsWithoutTempPassword) {
     const tempPassword = generateTemporaryPassword(8);
-    
+
     await db.user.update({
       where: { id: client.id },
       data: {
@@ -37,7 +37,7 @@ async function assignTemporaryPasswordsToClients() {
         hasResetPassword: false,
       },
     });
-    
+
     assignedCount++;
     console.log(`Assigned temporary password to client: ${client.email} (${client.firstName} ${client.lastName}) - Temp Password: ${tempPassword}`);
   }
@@ -47,7 +47,7 @@ async function assignTemporaryPasswordsToClients() {
 
 async function assignDefaultColorsToCleaners() {
   console.log("Checking for cleaners without colors...");
-  
+
   // Default color palette for cleaners
   const defaultColors = [
     "#FF6B6B", // Coral red
@@ -61,7 +61,7 @@ async function assignDefaultColorsToCleaners() {
     "#FDCB6E", // Orange
     "#6C5CE7", // Purple
   ];
-  
+
   // Find all CLEANER users who don't have a color
   const cleanersWithoutColor = await db.user.findMany({
     where: {
@@ -73,17 +73,18 @@ async function assignDefaultColorsToCleaners() {
   console.log(`Found ${cleanersWithoutColor.length} cleaners without colors`);
 
   let assignedCount = 0;
-  
+
   for (let i = 0; i < cleanersWithoutColor.length; i++) {
     const cleaner = cleanersWithoutColor[i];
+    if (!cleaner) continue;
     // Cycle through the color palette
     const color = defaultColors[i % defaultColors.length];
-    
+
     await db.user.update({
       where: { id: cleaner.id },
       data: { color },
     });
-    
+
     assignedCount++;
     console.log(`Assigned color ${color} to cleaner: ${cleaner.email} (${cleaner.firstName} ${cleaner.lastName})`);
   }
@@ -93,31 +94,31 @@ async function assignDefaultColorsToCleaners() {
 
 async function migrateTimeOffRequestDates() {
   console.log("Migrating time-off request dates to corrected format...");
-  
+
   // Find all time-off requests
   const allRequests = await db.timeOffRequest.findMany();
-  
+
   console.log(`Found ${allRequests.length} time-off requests to check`);
-  
+
   let migratedCount = 0;
-  
+
   for (const request of allRequests) {
     // Check if this request uses the old format (00:00:00.000Z timestamps)
     const startHour = request.startDate.getUTCHours();
     const endHour = request.endDate.getUTCHours();
-    
+
     // Old format has 00:00:00.000Z (hour 0), new format has 12:00:00.000Z (hour 12)
     if (startHour === 0 || endHour === 0) {
       // This request needs migration
-      
+
       // Create new dates with 12:00:00.000Z time component
       // Keep the dates as inclusive (don't add 1 day to end date)
       const newStartDate = new Date(request.startDate);
       newStartDate.setUTCHours(12, 0, 0, 0);
-      
+
       const newEndDate = new Date(request.endDate);
       newEndDate.setUTCHours(12, 0, 0, 0);
-      
+
       await db.timeOffRequest.update({
         where: { id: request.id },
         data: {
@@ -125,7 +126,7 @@ async function migrateTimeOffRequestDates() {
           endDate: newEndDate,
         },
       });
-      
+
       migratedCount++;
       console.log(
         `Migrated request #${request.id}: ` +
@@ -134,13 +135,13 @@ async function migrateTimeOffRequestDates() {
       );
     }
   }
-  
+
   console.log(`Successfully migrated ${migratedCount} time-off requests to new date format`);
 }
 
 async function migrateAdminPermissions() {
   console.log("Migrating admin permissions...");
-  
+
   // Set all permissions for OWNER users
   const owners = await db.user.findMany({
     where: { role: "OWNER" },
@@ -186,7 +187,7 @@ async function migrateAdminPermissions() {
 
 async function migratePaymentMethodEnum() {
   console.log("Migrating PaymentMethod enum values from SAVED_CARD to CREDIT_CARD...");
-  
+
   // Find bookings using the deprecated enum value
   // Use 'as any' to bypass TypeScript type checking on the old enum value
   const bookingsToMigrate = await db.booking.findMany({
@@ -203,7 +204,7 @@ async function migratePaymentMethodEnum() {
   console.log(`Found ${bookingsToMigrate.length} bookings with SAVED_CARD payment method`);
 
   const bookingIds = bookingsToMigrate.map(b => b.id);
-  
+
   // Update all affected bookings
   const updateResult = await db.booking.updateMany({
     where: {
@@ -219,10 +220,10 @@ async function migratePaymentMethodEnum() {
 
 async function initializeConfiguration() {
   console.log("Initializing configuration...");
-  
+
   // Check if configuration record exists
   const existingConfig = await db.configuration.findFirst();
-  
+
   if (!existingConfig) {
     // Create default configuration
     await db.configuration.create({
@@ -263,19 +264,19 @@ async function setup() {
     console.log("\n=== Owner Login Credentials ===");
     console.log(`Email: owner@example.com | Password: ${env.ADMIN_PASSWORD}`);
     console.log("================================\n");
-    
+
     // Migrate admin permissions
     await migrateAdminPermissions();
-    
+
     // Assign temporary passwords to existing clients without them
     await assignTemporaryPasswordsToClients();
-    
+
     // Assign default colors to existing cleaners without them
     await assignDefaultColorsToCleaners();
-    
+
     // Migrate time-off request dates to corrected format
     await migrateTimeOffRequestDates();
-    
+
     // Still need to check if existing bookings need checklists attached
     await attachChecklistsToExistingBookings();
     return;
@@ -285,7 +286,7 @@ async function setup() {
   const existingUsers = await db.user.count();
   if (existingUsers > 0) {
     console.log("Database already has users but no owner, creating owner user...");
-    
+
     await db.user.create({
       data: {
         email: "owner@example.com",
@@ -300,19 +301,19 @@ async function setup() {
     console.log("\n=== Owner Login Credentials ===");
     console.log(`Email: owner@example.com | Password: ${env.ADMIN_PASSWORD}`);
     console.log("================================\n");
-    
+
     // Migrate admin permissions
     await migrateAdminPermissions();
-    
+
     // Assign temporary passwords to existing clients without them
     await assignTemporaryPasswordsToClients();
-    
+
     // Assign default colors to existing cleaners without them
     await assignDefaultColorsToCleaners();
-    
+
     // Migrate time-off request dates to corrected format
     await migrateTimeOffRequestDates();
-    
+
     // Still need to check if existing bookings need checklists attached
     await attachChecklistsToExistingBookings();
     return;
@@ -398,7 +399,7 @@ async function setup() {
   // Create checklist templates BEFORE creating bookings
   // This ensures templates are available when bookings are created
   console.log("Creating checklist templates...");
-  
+
   const standardCleaningTemplate = await db.checklistTemplate.create({
     data: {
       name: "Standard Home Cleaning Checklist",
@@ -531,7 +532,7 @@ async function setup() {
 
   // Create default pricing rules
   console.log("Creating default pricing rules...");
-  
+
   // Base prices for different service types
   await db.pricingRule.create({
     data: {
@@ -889,23 +890,23 @@ async function setup() {
   console.log("  Email: cleaner1@example.com | Password: password123");
   console.log("  Email: cleaner2@example.com | Password: password123");
   console.log("================================\n");
-  
+
   // Migrate admin permissions
   await migrateAdminPermissions();
-  
+
   // Assign temporary passwords to all clients (including the sample ones we just created)
   await assignTemporaryPasswordsToClients();
-  
+
   // Assign default colors to all cleaners (in case any are missing)
   await assignDefaultColorsToCleaners();
-  
+
   // Migrate time-off request dates to corrected format (in case any exist)
   await migrateTimeOffRequestDates();
 }
 
 async function attachChecklistsToExistingBookings() {
   console.log("Checking for bookings that need checklists...");
-  
+
   // Find all bookings that don't have a checklist
   const bookingsNeedingChecklists = await db.booking.findMany({
     where: {
@@ -916,7 +917,7 @@ async function attachChecklistsToExistingBookings() {
   console.log(`Found ${bookingsNeedingChecklists.length} bookings without checklists`);
 
   let attachedCount = 0;
-  
+
   for (const booking of bookingsNeedingChecklists) {
     // Find a matching template for this booking's service type
     const matchingTemplate = await db.checklistTemplate.findFirst({

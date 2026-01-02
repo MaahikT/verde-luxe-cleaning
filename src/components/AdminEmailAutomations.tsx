@@ -143,7 +143,7 @@ export function AdminEmailAutomations() {
 
       <Tab.Group
         selectedIndex={RECIPIENT_TABS.findIndex(t => t.value === selectedRecipient)}
-        onChange={(idx) => setSelectedRecipient(RECIPIENT_TABS[idx].value)}
+        onChange={(idx) => setSelectedRecipient(RECIPIENT_TABS[idx]!.value)}
       >
         <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1 max-w-md">
           {RECIPIENT_TABS.map((tab) => (

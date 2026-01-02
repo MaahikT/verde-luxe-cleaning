@@ -372,10 +372,10 @@ function LeadsPage() {
                     </div>
                     <div>
                       <p className="text-gray-900 font-semibold text-lg mb-1">
-                        {leadsQuery.data.leads.length === 0 ? "No Leads Yet" : "No Leads Found"}
+                        {leadsQuery.data?.leads.length === 0 ? "No Leads Yet" : "No Leads Found"}
                       </p>
                       <p className="text-gray-600 text-sm">
-                        {leadsQuery.data.leads.length === 0
+                        {leadsQuery.data?.leads.length === 0
                           ? "Leads from your contact form will appear here"
                           : "Try adjusting your filters"}
                       </p>

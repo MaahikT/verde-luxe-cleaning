@@ -887,7 +887,7 @@ function AdminPortalPage() {
 
   return (
     <PortalLayout portalType="admin">
-      <div className="bg-[#EAE9E3] min-h-screen">
+      <div className="bg-[#EAE9E3] min-h-screen w-full">
         {/* Header Section */}
         <DashboardHeader />
 
@@ -926,22 +926,30 @@ function AdminPortalPage() {
                     />
                   </div>
 
-                  {/* Main 3-Column Layout - Revenue Overview, Pending/Upcoming (stacked), Calendar */}
+                  {/* Main Layout - Unified Grid (Vertical Calendar) */}
                   <div className="grid gap-4 lg:grid-cols-3">
-                    {/* Column 1: Revenue Overview */}
-                    <RevenueOverviewCard data={monthlyMetricsQuery.data?.revenueTrends || []} />
+                    {/* Revenue Overview: Row 1, Col 1-2 */}
+                    <div className="lg:col-span-2 h-[340px]">
+                      <RevenueOverviewCard data={monthlyMetricsQuery.data?.revenueTrends || []} />
+                    </div>
 
-                    {/* Column 2: Pending Charges + Upcoming Jobs (stacked) */}
-                    <div className="space-y-4">
-                      <PendingChargesCard />
+                    {/* Personal Calendar: Row 1-2, Col 3 (Full Height) */}
+                    <div className="lg:col-span-1 lg:row-span-2 h-full min-h-[340px]">
+                      <MiniPersonalCalendarCard />
+                    </div>
+
+                    {/* Pending Charges: Row 2, Col 1 */}
+                    <div className="h-[340px] overflow-hidden rounded-[20px]">
+                       <PendingChargesCard />
+                    </div>
+
+                    {/* Upcoming Jobs: Row 2, Col 2 */}
+                    <div className="h-[340px] overflow-hidden rounded-[20px]">
                       <UpcomingJobsCard
                         jobs={monthlyMetricsQuery.data?.upcomingJobs || []}
                         onJobClick={handleBookingClick as any}
                       />
                     </div>
-
-                    {/* Column 3: Personal Calendar */}
-                    <MiniPersonalCalendarCard />
                   </div>
                 </>
               )}

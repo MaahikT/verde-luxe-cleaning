@@ -9,9 +9,9 @@ interface DashboardHeaderProps {
   hasUnreadNotifications?: boolean;
 }
 
-export function DashboardHeader({ 
+export function DashboardHeader({
   subtitle = "Manage your cleaning business overview.",
-  hasUnreadNotifications = false 
+  hasUnreadNotifications = false
 }: DashboardHeaderProps) {
   const { user } = useAuthStore();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -19,13 +19,13 @@ export function DashboardHeader({
   if (!user) return null;
 
   // Format role for display
-  const roleDisplay = user.role === "OWNER" ? "Owner" : 
-                      user.role === "ADMIN" ? "Admin" : 
-                      user.role === "CLEANER" ? "Cleaner" : 
+  const roleDisplay = user.role === "OWNER" ? "Owner" :
+                      user.role === "ADMIN" ? "Admin" :
+                      user.role === "CLEANER" ? "Cleaner" :
                       "Client";
 
   return (
-    <div className="bg-[#EAE9E3]">
+    <div className="bg-[#EAE9E3] w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between gap-6">
           {/* Left: Greeting Block */}
@@ -40,6 +40,10 @@ export function DashboardHeader({
 
           {/* Right: Search, Notifications, Profile */}
           <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative">
+
+            </div>
+
             {/* Search */}
             <div className="relative">
               {isSearchOpen ? (
@@ -78,11 +82,11 @@ export function DashboardHeader({
               <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                 <User className="w-5 h-5 text-white" />
               </div>
-              
+
               {/* Name and Role */}
               <div className="flex flex-col min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user.firstName && user.lastName 
+                  {user.firstName && user.lastName
                     ? `${user.firstName} ${user.lastName}`
                     : user.email}
                 </p>

@@ -32,7 +32,6 @@ export const bookingRouter = createTRPCRouter({
           email: input.email,
           howHeardAbout: input.howHeardAbout,
           message: input.message || null,
-          smsConsent: input.smsConsent,
         },
       });
 

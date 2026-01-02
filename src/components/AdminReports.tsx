@@ -44,7 +44,7 @@ export function AdminReports() {
   // Helper function to parse date string in local time (avoids UTC timezone issues)
   const parseLocalDate = (dateString: string): Date => {
     const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed
+    return new Date(year!, month! - 1, day!); // month is 0-indexed
   };
 
   // Fetch revenue report data

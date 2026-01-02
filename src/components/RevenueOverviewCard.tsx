@@ -30,13 +30,13 @@ export function RevenueOverviewCard({ data }: RevenueOverviewCardProps) {
   // Helper function to create smooth Bezier curve path
   const getSmoothPath = (points: { x: number; y: number }[]) => {
     if (points.length === 0) return '';
-    if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+    if (points.length === 1) return `M ${points[0]!.x} ${points[0]!.y}`;
 
-    let path = `M ${points[0].x} ${points[0].y}`;
+    let path = `M ${points[0]!.x} ${points[0]!.y}`;
 
     for (let i = 0; i < points.length - 1; i++) {
-      const current = points[i];
-      const next = points[i + 1];
+      const current = points[i]!;
+      const next = points[i + 1]!;
 
       // Calculate control points for smooth curve
       const prev = points[i - 1] || current;
@@ -61,25 +61,25 @@ export function RevenueOverviewCard({ data }: RevenueOverviewCardProps) {
 
   // Create area path (for gradient fill) using smooth curve
   const areaPath = points.length > 0
-    ? `${linePath} L ${points[points.length - 1].x} ${chartHeight} L 0 ${chartHeight} Z`
+    ? `${linePath} L ${points[points.length - 1]!.x} ${chartHeight} L 0 ${chartHeight} Z`
     : "";
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-brand-white rounded-[20px] p-5 shadow-sm h-full flex flex-col">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h3 className="text-base font-semibold text-gray-900 mb-0.5">Revenue Overview</h3>
-          <p className="text-xs text-gray-600">Last 6 months</p>
+          <h3 className="text-lg font-medium text-brand-black mb-0.5">Revenue Overview</h3>
+          <p className="text-xs text-brand-grey">Last 6 months</p>
         </div>
-        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-          <TrendingUp className="w-5 h-5 text-green-600" />
+        <div className="w-8 h-8 bg-brand-green-soft rounded-lg flex items-center justify-center">
+          <TrendingUp className="w-4 h-4 text-brand-accent-green" />
         </div>
       </div>
 
       {data.length === 0 ? (
         <div className="text-center py-6">
-          <TrendingUp className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">No revenue data available yet</p>
+          <TrendingUp className="w-10 h-10 text-brand-grey mx-auto mb-2 opacity-50" />
+          <p className="text-sm text-brand-grey">No revenue data available yet</p>
         </div>
       ) : (
         <>
@@ -92,20 +92,9 @@ export function RevenueOverviewCard({ data }: RevenueOverviewCardProps) {
             >
               <defs>
                 <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#163022" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#163022" stopOpacity="0.01" />
+                  <stop offset="0%" stopColor="#4C6C5A" stopOpacity="0.2" /> {/* brand-green-dark */}
+                  <stop offset="100%" stopColor="#4C6C5A" stopOpacity="0" />
                 </linearGradient>
-                <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="1" />
-                  <feOffset dx="0" dy="1" result="offsetblur" />
-                  <feComponentTransfer>
-                    <feFuncA type="linear" slope="0.2" />
-                  </feComponentTransfer>
-                  <feMerge>
-                    <feMergeNode />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
               </defs>
 
               {/* Horizontal gridlines - representing revenue values from 0 to maxRevenue */}
@@ -118,28 +107,13 @@ export function RevenueOverviewCard({ data }: RevenueOverviewCardProps) {
                     y1={yPosition}
                     x2="100"
                     y2={yPosition}
-                    stroke="#e5e7eb"
+                    stroke="#E6E6E6" // brand-border
                     strokeWidth="0.5"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.5"
                   />
                 );
               })}
-
-              {/* Vertical gridlines */}
-              {points.map((point, index) => (
-                <line
-                  key={`v-grid-${index}`}
-                  x1={point.x}
-                  y1={padding}
-                  x2={point.x}
-                  y2={chartHeight}
-                  stroke="#e5e7eb"
-                  strokeWidth="0.5"
-                  vectorEffect="non-scaling-stroke"
-                  opacity="0.3"
-                />
-              ))}
 
               {/* Area fill */}
               <path
@@ -151,22 +125,23 @@ export function RevenueOverviewCard({ data }: RevenueOverviewCardProps) {
               <path
                 d={linePath}
                 fill="none"
-                stroke="#163022"
-                strokeWidth="2.5"
+                stroke="#4C6C5A" // brand-green-dark
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 vectorEffect="non-scaling-stroke"
               />
 
-              {/* Data points - smaller for cleaner look */}
+              {/* Data points */}
               {points.map((point, index) => (
                 <circle
                   key={index}
                   cx={point.x}
                   cy={point.y}
-                  r="2"
-                  fill="#163022"
-                  filter="url(#dropShadow)"
+                  r="2.5"
+                  fill="#FFFFFF"
+                  stroke="#4C6C5A"
+                  strokeWidth="1.5"
                   vectorEffect="non-scaling-stroke"
                 />
               ))}
@@ -174,11 +149,11 @@ export function RevenueOverviewCard({ data }: RevenueOverviewCardProps) {
           </div>
 
           {/* X-axis labels */}
-          <div className="flex justify-between mt-2">
+          <div className="flex justify-between mt-3">
             {data.map((item, index) => (
-              <div key={item.monthKey} className="text-xs text-gray-600 text-center flex-1">
-                <div className="font-medium">{item.month.split(' ')[0]}</div>
-                <div className="text-gray-500 mt-0.5">${item.revenue.toFixed(0)}</div>
+              <div key={item.monthKey} className="text-[10px] text-brand-grey text-center flex-1">
+                <div className="font-medium mb-0.5">{item.month.split(' ')[0]}</div>
+                <div className="text-brand-black/70">${item.revenue.toFixed(0)}</div>
               </div>
             ))}
           </div>

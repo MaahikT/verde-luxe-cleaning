@@ -201,13 +201,13 @@ export function PortalSidebar({ portalType }: PortalSidebarProps) {
   // For items with sub-items, get the target for the main icon (first sub-item)
   const getItemTarget = (item: NavItem) => {
     if (item.subItems && item.subItems.length > 0) {
-      const firstSubItem = item.subItems[0];
+      const firstSubItem = item.subItems[0]!;
       if (portalType === "admin") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return { to: "/admin-portal" as const, search: { view: firstSubItem.view as any } };
+        return { to: "/admin-portal" as const, search: { view: firstSubItem.view } as any };
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return { to: "." as const, search: { view: firstSubItem.view as any } };
+        return { to: "." as const, search: { view: firstSubItem.view } as any };
       }
     }
 
@@ -219,11 +219,11 @@ export function PortalSidebar({ portalType }: PortalSidebarProps) {
         return { to: "/admin-portal/bank-transactions" as const };
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return { to: "/admin-portal" as const, search: { view: item.view as any } };
+        return { to: "/admin-portal" as const, search: { view: item.view } as any };
       }
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { to: "." as const, search: { view: item.view as any } };
+      return { to: "." as const, search: { view: item.view } as any };
     }
   };
 
@@ -312,15 +312,15 @@ export function PortalSidebar({ portalType }: PortalSidebarProps) {
 
                           {/* Sub-items */}
                           <div className="py-1">
-                            {item.subItems.map((subItem) => {
+                            {item.subItems!.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const subActive = isActive(subItem.view);
 
                               const subItemProps = portalType === "admin"
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                ? { to: "/admin-portal" as const, search: { view: subItem.view as any } }
+                                ? { to: "/admin-portal" as const, search: { view: subItem.view } as any }
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                : { to: "." as const, search: { view: subItem.view as any } };
+                                : { to: "." as const, search: { view: subItem.view } as any };
 
                               return (
                                 <Link
@@ -428,15 +428,15 @@ export function PortalSidebar({ portalType }: PortalSidebarProps) {
                       </button>
                       {isExpanded && (
                         <div className="ml-4 mt-1 space-y-1">
-                          {item.subItems.map((subItem) => {
+                          {item.subItems!.map((subItem) => {
                             const SubIcon = subItem.icon;
                             const subActive = isActive(subItem.view);
 
                             const subItemProps = portalType === "admin"
                               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              ? { to: "/admin-portal" as const, search: { view: subItem.view as any } }
+                              ? { to: "/admin-portal" as const, search: { view: subItem.view } as any }
                               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              : { to: "." as const, search: { view: subItem.view as any } };
+                              : { to: "." as const, search: { view: subItem.view } as any };
 
                             return (
                               <Link
@@ -495,7 +495,7 @@ export function PortalSidebar({ portalType }: PortalSidebarProps) {
                             <Link
                               to="/admin-portal"
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                search={{ view: item.view as any }}
+                                search={{ view: item.view } as any}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
                                   active
                                     ? "bg-primary text-white shadow-md"
@@ -513,7 +513,7 @@ export function PortalSidebar({ portalType }: PortalSidebarProps) {
                             <Link
                               to="."
                               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              search={{ view: item.view as any }}
+                              search={{ view: item.view } as any}
                               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
                                 active
                                 ? "bg-primary text-white shadow-md"

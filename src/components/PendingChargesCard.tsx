@@ -55,57 +55,59 @@ export function PendingChargesCard() {
   const isLoading = pendingChargesQuery.isLoading;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-brand-white rounded-[20px] p-5 shadow-sm h-full flex flex-col">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h3 className="text-base font-semibold text-gray-900 mb-0.5">Pending Charges</h3>
-          <p className="text-xs text-gray-600">
+          <h3 className="text-lg font-medium text-brand-black mb-0.5">Pending Charges</h3>
+          <p className="text-xs text-brand-grey">
             {totalCount > 0 ? `${totalCount} job${totalCount !== 1 ? 's' : ''} ready to charge` : 'All caught up!'}
           </p>
         </div>
-        <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-          <DollarSign className="w-5 h-5 text-yellow-600" />
+        <div className="w-8 h-8 bg-brand-beige/50 rounded-lg flex items-center justify-center">
+          <DollarSign className="w-4 h-4 text-brand-black" />
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader className="w-6 h-6 animate-spin text-primary" />
+          <Loader className="w-6 h-6 animate-spin text-brand-grey" />
         </div>
       ) : bookings.length === 0 ? (
         <div className="text-center py-6">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="w-10 h-10 bg-brand-green-soft rounded-full flex items-center justify-center mx-auto mb-2">
+            <CheckCircle className="w-5 h-5 text-brand-accent-green" />
           </div>
-          <p className="text-gray-600 text-xs">No pending charges</p>
+          <p className="text-brand-grey text-xs">No pending charges</p>
         </div>
       ) : (
         <>
-          <div className="space-y-2">
+          <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
             {bookings.map((booking) => (
               <div
                 key={booking.id}
-                className="border border-gray-200 rounded-lg p-3 hover:border-primary/30 transition-colors"
+                className="group flex flex-col p-2.5 rounded-xl border border-transparent hover:border-brand-border hover:bg-brand-bg-light/30 transition-all"
               >
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <p className="text-sm font-semibold text-gray-900 truncate">
+                      <div className="w-6 h-6 rounded-full bg-brand-purple flex items-center justify-center text-brand-black text-[10px] font-bold">
+                         {booking.client.firstName?.[0]}
+                      </div>
+                      <p className="text-sm font-medium text-brand-black truncate">
                         {booking.client.firstName} {booking.client.lastName}
                       </p>
                     </div>
-                    <p className="text-xs text-gray-600 truncate">{booking.serviceType}</p>
+                    <p className="text-[10px] text-brand-grey truncate pl-8">{booking.serviceType}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-green-600">
+                    <p className="text-sm font-bold text-brand-accent-green">
                       ${booking.finalPrice?.toFixed(2) || "0.00"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex items-center justify-between gap-4 pl-8">
+                  <div className="flex items-center gap-1.5 text-[10px] text-brand-grey">
                     <Calendar className="w-3 h-3" />
                     {new Date(booking.scheduledDate).toLocaleDateString('en-US', {
                       month: 'short',
@@ -116,7 +118,7 @@ export function PendingChargesCard() {
                   <button
                     onClick={() => handleChargeCard(booking)}
                     disabled={capturePaymentMutation.isPending}
-                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    className="px-3 py-1.5 bg-brand-black text-white rounded-lg hover:bg-gray-800 transition-colors text-[10px] font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                   >
                     {capturePaymentMutation.isPending ? (
                       <>
@@ -136,8 +138,8 @@ export function PendingChargesCard() {
           </div>
 
           {totalCount > 5 && (
-            <div className="mt-3 pt-3 border-t border-gray-200 text-center">
-              <p className="text-xs text-gray-600">
+            <div className="mt-auto pt-3 text-center">
+              <p className="text-[10px] text-brand-grey">
                 +{totalCount - 5} more pending charge{totalCount - 5 !== 1 ? 's' : ''}
               </p>
             </div>

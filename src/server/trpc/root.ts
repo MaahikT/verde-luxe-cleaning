@@ -8,6 +8,7 @@ import { paymentRouter } from "./routers/payment";
 import { mercuryRouter } from "./routers/mercury";
 import { emailTemplateRouter } from "./routers/emailTemplates";
 import { login } from "./procedures/auth/login";
+import { register } from "./procedures/auth/register";
 import { getCurrentUser } from "./procedures/auth/getCurrentUser";
 import { forgotPassword } from "./procedures/auth/forgotPassword";
 import { getSchedule } from "./procedures/cleaner/getSchedule";
@@ -71,6 +72,7 @@ export const appRouter = createTRPCRouter({
   emailTemplates: emailTemplateRouter, // Router for email templates
   // Auth procedures
   login,
+  register,
   getCurrentUser,
   forgotPassword,
   // Cleaner procedures

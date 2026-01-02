@@ -84,7 +84,7 @@ function ChecklistPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {checklistData[activeTab].map((item, index) => (
+                  {checklistData[activeTab]!.map((item, index) => (
                     <tr key={index} className="border-b border-gray-200">
                       <td className="py-3 px-5 text-sm text-gray-700 border border-gray-200">
                         {item.task}

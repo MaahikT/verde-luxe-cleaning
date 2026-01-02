@@ -155,7 +155,7 @@ export function PaymentForm({
 
       <button
         type="submit"
-        disabled={!stripe || isProcessing || paymentStatus === "succeeded"}
+        disabled={!stripe || isProcessing}
         className="w-full flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold text-white bg-[#6c9a4e] border-2 border-[#6c9a4e] rounded-full hover:bg-[#5a8442] hover:border-[#5a8442] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isProcessing ? (

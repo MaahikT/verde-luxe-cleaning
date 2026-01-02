@@ -17,7 +17,7 @@ async function compareContacts() {
         const response = await fetch(`https://api.openphone.com/v1/contacts/${id}`, {
         method: "GET",
         headers: {
-            "Authorization": env.OPENPHONE_API_KEY,
+            "Authorization": env.OPENPHONE_API_KEY || "",
             "Content-Type": "application/json",
         }
         });
