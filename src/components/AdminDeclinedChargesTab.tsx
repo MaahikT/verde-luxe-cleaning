@@ -243,12 +243,21 @@ export function AdminDeclinedChargesTab() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
-                        <div className="text-sm text-gray-900">
-                          {new Date(payment.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
+                        <div>
+                          <div className="text-sm text-gray-900">
+                            {new Date(payment.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(payment.createdAt).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </div>
                         </div>
                       </div>
                     </td>

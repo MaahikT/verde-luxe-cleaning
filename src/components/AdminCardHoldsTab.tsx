@@ -297,7 +297,22 @@ export function AdminCardHoldsTab() {
                               year: 'numeric',
                             })}
                           </div>
-                          <div className="text-xs text-gray-600">{booking.scheduledTime}</div>
+                          <div className="text-xs text-gray-600">
+                            {(() => {
+                              if (!booking.scheduledTime) return "";
+                              const parts = booking.scheduledTime.split(':');
+                              if (parts.length < 2) return booking.scheduledTime;
+                              const hours = parseInt(parts[0]!);
+                              const minutes = parseInt(parts[1]!);
+                              const date = new Date();
+                              date.setHours(hours, minutes);
+                              return date.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              });
+                            })()}
+                          </div>
                         </div>
                       </div>
                     </td>

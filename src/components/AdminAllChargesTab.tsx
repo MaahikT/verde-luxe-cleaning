@@ -311,7 +311,11 @@ export function AdminAllChargesTab() {
                             })}
                           </div>
                           <div className="text-xs text-gray-500">
-                            Latest activity
+                            {new Date(group.latestDate).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
                           </div>
                         </div>
                       </div>
