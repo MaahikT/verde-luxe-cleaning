@@ -63,6 +63,7 @@ import { getMonthlyDashboardMetrics } from "./procedures/admin/getMonthlyDashboa
 import { deleteLeadAdmin } from "./procedures/admin/deleteLeadAdmin";
 import { updateLeadAdmin } from "./procedures/admin/updateLeadAdmin";
 import { cancelBookingAdmin } from "./procedures/admin/cancelBookingAdmin";
+import { processPaymentHolds } from "./procedures/admin/processPaymentHolds";
 
 
 export const appRouter = createTRPCRouter({
@@ -117,6 +118,7 @@ export const appRouter = createTRPCRouter({
   updateLeadAdmin, // Added updateLeadAdmin here
   deleteLeadAdmin,
   cancelBookingAdmin, // Added cancelBookingAdmin here
+  processPaymentHolds,
   // Checklist procedures
   createChecklistTemplate,
   getChecklistTemplates,

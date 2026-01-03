@@ -630,10 +630,10 @@ function AdminBookingFormInner({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-1">
-                {booking ? "Edit Booking" : "Create New Booking"}
+                {booking && booking.id ? "Edit Booking" : "Create New Booking"}
               </h2>
               <p className="text-green-100 text-sm">
-                {booking ? `Booking #${booking.id}` : "Fill in the details below"}
+                {booking && booking.id ? `Booking #${booking.id}` : "Fill in the details below"}
               </p>
             </div>
             <button

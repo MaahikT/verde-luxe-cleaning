@@ -210,3 +210,43 @@
 [2026-01-02T03:16:28.013Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
 [2026-01-02T03:16:28.015Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
 [2026-01-02T03:16:28.015Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-02T17:50:35.643Z] [AdminBookingStart] Mutation started. ClientId: undefined
+[2026-01-02T17:50:35.777Z] [AdminBooking] Checking OpenPhone sync for Client ID: 24
+[2026-01-02T17:50:35.781Z] [AdminBooking] Client found: farhan@gmail.com, Phone: 7344313249, existingID: null
+[2026-01-02T17:50:35.781Z] [AdminBooking] Initiating OpenPhone Contact Creation...
+[2026-01-02T17:50:35.782Z] [OpenPhone] Attempting to create contact. Name: Farhan J, Phone: +17344313249 (Original: 7344313249)
+[2026-01-02T17:50:36.059Z] [OpenPhone] Found existing contact via search. ID: 695720cc3238d508ad9fc3ad
+[2026-01-02T17:50:36.060Z] [AdminBooking] OpenPhone Service returned ID: 695720cc3238d508ad9fc3ad
+[2026-01-02T17:50:36.065Z] [AdminBooking] User updated with OpenPhone ID.
+[2026-01-02T18:11:43.548Z] [AdminBookingStart] Mutation started. ClientId: 25
+[2026-01-02T18:11:43.757Z] [AdminBooking] Checking OpenPhone sync for Client ID: 25
+[2026-01-02T18:11:43.763Z] [AdminBooking] Client found: atkunjadia@gmail.com, Phone: 2483789067, existingID: null
+[2026-01-02T18:11:43.763Z] [AdminBooking] Initiating OpenPhone Contact Creation...
+[2026-01-02T18:11:43.764Z] [OpenPhone] Attempting to create contact. Name: Ayush K, Phone: +12483789067 (Original: 2483789067)
+[2026-01-02T18:11:44.205Z] [OpenPhone] Found existing contact via search. ID: 695709cc50908c7fba980dca
+[2026-01-02T18:11:44.206Z] [AdminBooking] OpenPhone Service returned ID: 695709cc50908c7fba980dca
+[2026-01-02T18:11:44.213Z] [AdminBooking] User updated with OpenPhone ID.
+[2026-01-02T18:15:54.899Z] [AdminBookingStart] Mutation started. ClientId: 25
+[2026-01-02T18:15:55.810Z] [AdminBooking] Checking OpenPhone sync for Client ID: 25
+[2026-01-02T18:15:55.813Z] [AdminBooking] Client found: atkunjadia@gmail.com, Phone: 2483789067, existingID: 695709cc50908c7fba980dca
+[2026-01-02T18:15:55.815Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-02T18:17:52.667Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-02T18:17:53.766Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-02T18:17:53.775Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-02T18:17:53.775Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-02T18:20:05.195Z] [AdminBookingStart] Mutation started. ClientId: 25
+[2026-01-02T18:20:06.165Z] [AdminBooking] Checking OpenPhone sync for Client ID: 25
+[2026-01-02T18:20:06.168Z] [AdminBooking] Client found: atkunjadia@gmail.com, Phone: 2483789067, existingID: 695709cc50908c7fba980dca
+[2026-01-02T18:20:06.168Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-02T18:21:18.095Z] [AdminBookingStart] Mutation started. ClientId: 3
+[2026-01-02T18:21:19.027Z] [AdminBooking] Checking OpenPhone sync for Client ID: 3
+[2026-01-02T18:21:19.031Z] [AdminBooking] Client found: client@verdeluxe.com, Phone: 555-0123, existingID: 695591a6e30173a8eb2db690
+[2026-01-02T18:21:19.031Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-02T18:35:44.673Z] [AdminBookingStart] Mutation started. ClientId: 24
+[2026-01-02T18:35:44.884Z] [AdminBooking] Checking OpenPhone sync for Client ID: 24
+[2026-01-02T18:35:44.888Z] [AdminBooking] Client found: farhan@gmail.com, Phone: 7344313249, existingID: 695720cc3238d508ad9fc3ad
+[2026-01-02T18:35:44.888Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.
+[2026-01-03T22:25:47.823Z] [AdminBookingStart] Mutation started. ClientId: 25
+[2026-01-03T22:25:48.936Z] [AdminBooking] Checking OpenPhone sync for Client ID: 25
+[2026-01-03T22:25:48.939Z] [AdminBooking] Client found: atkunjadia@gmail.com, Phone: 2483789067, existingID: 695709cc50908c7fba980dca
+[2026-01-03T22:25:48.940Z] [AdminBooking] Skipping OpenPhone sync. Phone missing or ID already exists.

@@ -157,8 +157,16 @@ export const savePaymentMethod = baseProcedure
         // Payment method doesn't exist - create it
         console.log(`Creating new saved payment method ${input.paymentMethodId} for user ${input.clientId}`);
 
+        // Check if user has any existing payment methods
+        const existingCount = await db.savedPaymentMethod.count({
+          where: { userId: input.clientId },
+        });
+
+        // If this is the first method, force it to be default
+        const shouldBeDefault = input.setAsDefault || existingCount === 0;
+
         // If setting as default, unset other defaults first
-        if (input.setAsDefault) {
+        if (shouldBeDefault && existingCount > 0) {
           await db.savedPaymentMethod.updateMany({
             where: {
               userId: input.clientId,
@@ -179,7 +187,7 @@ export const savePaymentMethod = baseProcedure
             brand: paymentMethod.card.brand,
             expiryMonth: paymentMethod.card.exp_month,
             expiryYear: paymentMethod.card.exp_year,
-            isDefault: input.setAsDefault,
+            isDefault: shouldBeDefault,
           },
         });
       }

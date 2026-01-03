@@ -9,7 +9,7 @@ import { hasPermission } from "~/server/trpc/utils/permission-utils";
 import { generateFutureBookings } from "~/server/utils/recurrence";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-12-15.clover",
+  apiVersion: "2025-12-15.clover" as any,
 });
 
 export const updateBookingAdmin = baseProcedure
@@ -314,6 +314,81 @@ export const updateBookingAdmin = baseProcedure
 
         // Only place hold if we're within the delay window
         shouldPlaceHoldNow = hoursUntilBooking <= paymentHoldDelayHours;
+      }
+
+      // Check if we need to place a hold due to schedule change (entering hold window)
+      // and we are NOT already replacing payment method (which handles it below)
+      // and there is no active hold.
+      if (shouldPlaceHoldNow && !input.replacePaymentMethod && !input.savedPaymentMethodId) {
+         // Check for existing active hold
+         const existingHold = await db.payment.findFirst({
+            where: {
+                bookingId: input.bookingId,
+                isCaptured: false,
+                stripePaymentIntentId: { not: null },
+                status: { notIn: ["canceled", "failed"] }
+            }
+         });
+
+         if (!existingHold && existingBooking.clientId) {
+             console.log(`[UpdateBooking] Booking #${input.bookingId} entered hold window. Attempting to place hold.`);
+
+             // Try to find default payment method
+             const client = await db.user.findUnique({
+                 where: { id: existingBooking.clientId },
+                 include: { savedPaymentMethods: { orderBy: { isDefault: 'desc' }} }
+             });
+
+             if (client && client.stripeCustomerId && client.savedPaymentMethods.length > 0) {
+                 const paymentMethod = client.savedPaymentMethods[0]; // Default or first
+                 const amount = input.finalPrice || existingBooking.finalPrice || 0;
+
+                 if (amount > 0 && paymentMethod) {
+                     try {
+                         const paymentIntent = await stripe.paymentIntents.create({
+                             amount: Math.round(amount * 100),
+                             currency: "usd",
+                             customer: client.stripeCustomerId,
+                             payment_method: paymentMethod.stripePaymentMethodId,
+                             capture_method: "manual",
+                             confirm: true,
+                             off_session: true,
+                             description: `Booking #${input.bookingId}: ${input.serviceType || existingBooking.serviceType} (Auto Hold on Reschedule)`,
+                             metadata: {
+                                 bookingId: input.bookingId.toString(),
+                                 clientId: existingBooking.clientId.toString(),
+                             },
+                         });
+
+                         await db.payment.create({
+                             data: {
+                                 bookingId: input.bookingId,
+                                 amount: amount,
+                                 description: `Payment hold for booking #${input.bookingId} (Reschedule)`,
+                                 stripePaymentIntentId: paymentIntent.id,
+                                 stripePaymentMethodId: paymentMethod.stripePaymentMethodId,
+                                 status: paymentIntent.status,
+                                 isCaptured: false,
+                             },
+                         });
+
+                         // Update booking details
+                         await db.booking.update({
+                             where: { id: input.bookingId },
+                             data: {
+                                 paymentDetails: `Saved card ending in ${paymentMethod.last4} - Hold: ${paymentIntent.id}`
+                             }
+                         });
+                         console.log(`[UpdateBooking] Auto-hold placed successfully.`);
+                     } catch (e) {
+                         console.error(`[UpdateBooking] Failed to place auto-hold on reschedule:`, e);
+                         // Convert error to string safely
+                         const errorMessage = e instanceof Error ? e.message : String(e);
+                         // Don't throw, just log. Admin can fix later.
+                     }
+                 }
+             }
+         }
       }
 
       // Handle payment method changes

@@ -5,6 +5,7 @@ import { db } from "~/server/db";
 import { baseProcedure } from "~/server/trpc/main";
 import { env } from "~/server/env";
 import { hasPermission } from "~/server/trpc/utils/permission-utils";
+import { processPaymentHoldsLogic } from "~/server/utils/paymentHolds";
 
 export const updateConfiguration = baseProcedure
   .input(
@@ -72,6 +73,13 @@ export const updateConfiguration = baseProcedure
             cancellationFeeAmount: input.cancellationFeeAmount ?? 50.0,
           },
         });
+      }
+
+      // If payment hold delay changed, re-evaluate existing bookings
+      if (input.paymentHoldDelayHours !== undefined && input.paymentHoldDelayHours !== existingConfig?.paymentHoldDelayHours) {
+           console.log("[UpdateConfig] Payment hold delay changed. Re-evaluating existing bookings...");
+           // Fire and forget - don't block response
+           processPaymentHoldsLogic(input.paymentHoldDelayHours ?? undefined).catch(err => console.error("[UpdateConfig] Failed to process hold re-evaluation:", err));
       }
 
       return {

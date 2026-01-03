@@ -36,9 +36,10 @@ interface KanbanBoardProps {
   leads: Lead[];
   onDeleteLead: (leadId: number) => void;
   onEditLead: (lead: Lead) => void;
+  onConvertLead: (lead: Lead) => void;
 }
 
-export function KanbanBoard({ leads, onDeleteLead, onEditLead }: KanbanBoardProps) {
+export function KanbanBoard({ leads, onDeleteLead, onEditLead, onConvertLead }: KanbanBoardProps) {
   const trpc = useTRPC();
   const [activeId, setActiveId] = useState<number | null>(null);
   const queryClient = useQueryClient();
@@ -128,6 +129,7 @@ export function KanbanBoard({ leads, onDeleteLead, onEditLead }: KanbanBoardProp
           isDraggingOver={dragOverColumn === column.status}
           onDelete={onDeleteLead}
           onEdit={onEditLead}
+          onConvert={onConvertLead}
         />
       ))}
     </div>

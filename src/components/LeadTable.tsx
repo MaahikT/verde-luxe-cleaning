@@ -25,6 +25,7 @@ interface LeadTableProps {
   leads: Lead[];
   onDelete?: (leadId: number) => void;
   onEdit: (lead: Lead) => void;
+  onConvert: (lead: Lead) => void;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
@@ -35,7 +36,7 @@ const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor:
   OFFER_MADE: { label: "Offer Made", bgColor: "bg-primary/10", textColor: "text-primary" },
 };
 
-export function LeadTable({ leads, onDelete, onEdit }: LeadTableProps) {
+export function LeadTable({ leads, onDelete, onEdit, onConvert }: LeadTableProps) {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Lead | "name" | "status";
     direction: "asc" | "desc";
@@ -148,12 +149,19 @@ export function LeadTable({ leads, onDelete, onEdit }: LeadTableProps) {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <button
+                      <button
                         onClick={() => onEdit(lead)}
                         className="p-1.5 text-gray-400 hover:text-primary transition-colors hover:bg-gray-100 rounded-md"
                         title="Edit Lead"
                       >
                          <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onConvert(lead)}
+                        className="p-1.5 text-gray-400 hover:text-green-600 transition-colors hover:bg-green-50 rounded-md"
+                        title="Convert to Booking"
+                      >
+                         <ArrowUpDown className="w-4 h-4" />
                       </button>
                       {onDelete && (
                         <button

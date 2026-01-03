@@ -10,6 +10,7 @@ interface Lead {
   howHeardAbout: string;
   message: string | null;
   createdAt: Date;
+  status: string;
   user: {
     id: number;
     firstName: string | null;
@@ -24,9 +25,10 @@ interface LeadCardProps {
   onDragStart: (e: React.DragEvent, leadId: number) => void;
   onDragEnd: (e: React.DragEvent) => void;
   onEdit: (lead: Lead) => void;
+  onConvert: (lead: Lead) => void;
 }
 
-export function LeadCard({ lead, onDragStart, onDragEnd, onDelete, onEdit }: LeadCardProps & { onDelete?: (leadId: number) => void }) {
+export function LeadCard({ lead, onDragStart, onDragEnd, onDelete, onEdit, onConvert }: LeadCardProps & { onDelete?: (leadId: number) => void }) {
   const displayName = lead.firstName && lead.lastName
     ? `${lead.firstName} ${lead.lastName}`
     : lead.user?.firstName && lead.user?.lastName
@@ -53,6 +55,16 @@ export function LeadCard({ lead, onDragStart, onDragEnd, onDelete, onEdit }: Lea
           </h4>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onConvert(lead);
+            }}
+            className="p-1.5 hover:bg-green-50 rounded-md text-gray-400 hover:text-green-600 transition-colors"
+            title="Convert to Booking"
+          >
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-up-right"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();

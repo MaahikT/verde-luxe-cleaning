@@ -10,7 +10,7 @@ import { sendEmail } from "~/server/utils/mailer";
 import { EmailRecipientType, EmailEventCategory } from "@prisma/client";
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-12-18.clover" as any, // Cast to any to avoid strict typing issues if minor versions mismatch, or use specific version
+  apiVersion: "2025-12-15.clover" as any, // Cast to any to avoid strict typing issues if minor versions mismatch, or use specific version
 });
 
 export const cancelBookingAdmin = baseProcedure
@@ -57,7 +57,15 @@ export const cancelBookingAdmin = baseProcedure
       const booking = await db.booking.findUnique({
         where: { id: input.bookingId },
         include: {
-          client: true,
+          client: {
+            include: {
+              savedPaymentMethods: {
+                orderBy: {
+                  id: 'asc',
+                },
+              },
+            },
+          },
           payments: true, // Fetch payments to check for holds
         },
       });
@@ -118,18 +126,103 @@ export const cancelBookingAdmin = baseProcedure
       const feeToCharge = input.feeAmount ?? configuration?.cancellationFeeAmount ?? 50.0;
 
       if (input.chargeFee && feeToCharge > 0) {
-        // Create a record of the fee charge
-        // For now, we will create a Payment record with status 'pending' (or 'requires_capture' if we had a card)
-        // Since we don't have the full payment charging logic integrated here yet, we'll mark it as a pending payment.
-        // Ideally, we would trigger a Stripe charge here if `booking.paymentDetails` or saved card existed.
+        let paymentNote = `Cancellation Fee - ${input.cancellationReason || "No reason provided"}`;
+        let paymentStatus = "pending";
+        let stripeIntentId = null;
+        let isCaptured = false;
+
+        // Try to charge the client's card immediately
+        if (booking.client.stripeCustomerId) {
+           try {
+             // Get payment method from local DB
+             const savedMethods = booking.client.savedPaymentMethods;
+             const defaultMethod = savedMethods.find(m => m.isDefault) || savedMethods[0];
+
+             if (defaultMethod) {
+               const paymentMethodId = defaultMethod.stripePaymentMethodId;
+
+               const paymentIntent = await stripe.paymentIntents.create({
+                 amount: Math.round(feeToCharge * 100), // Convert to cents
+                 currency: "usd",
+                 customer: booking.client.stripeCustomerId,
+                 payment_method: paymentMethodId,
+                 confirm: true,
+                 off_session: true, // Important for backend-initiated charges
+                 description: paymentNote,
+                 metadata: {
+                   bookingId: booking.id.toString(),
+                   type: "cancellation_fee"
+                 }
+               });
+
+               if (paymentIntent.status === "succeeded") {
+                 paymentStatus = "succeeded";
+                 isCaptured = true;
+                 stripeIntentId = paymentIntent.id;
+                 paymentNote += " (Charged successfully)";
+               } else {
+                 paymentStatus = paymentIntent.status;
+                 stripeIntentId = paymentIntent.id;
+                 paymentNote += ` (Charge status: ${paymentIntent.status})`;
+               }
+             } else {
+                // Fallback to checking Stripe directly if no local methods (legacy support)
+                 const paymentMethods = await stripe.customers.listPaymentMethods(
+                   booking.client.stripeCustomerId,
+                   { type: 'card', limit: 100 }
+                 );
+
+                 if (paymentMethods.data.length > 0) {
+                   // Sort by created date ascending (oldest first) to find the "initial" card
+                   const sortedMethods = paymentMethods.data.sort((a, b) => a.created - b.created);
+                   const paymentMethodId = sortedMethods[0]!.id;
+
+                   console.log(`[CancelBooking] Using fallback Stripe method (Oldest): ${paymentMethodId} (Created: ${sortedMethods[0]!.created})`);
+
+                   const paymentIntent = await stripe.paymentIntents.create({
+                     amount: Math.round(feeToCharge * 100),
+                     currency: "usd",
+                     customer: booking.client.stripeCustomerId,
+                     payment_method: paymentMethodId,
+                     confirm: true,
+                     off_session: true,
+                     description: paymentNote,
+                     metadata: {
+                       bookingId: booking.id.toString(),
+                       type: "cancellation_fee"
+                     }
+                   });
+                   if (paymentIntent.status === "succeeded") {
+                      paymentStatus = "succeeded";
+                      isCaptured = true;
+                      stripeIntentId = paymentIntent.id;
+                      paymentNote += " (Charged successfully via Stripe fallback)";
+                    } else {
+                      paymentStatus = paymentIntent.status;
+                      stripeIntentId = paymentIntent.id;
+                      paymentNote += ` (Charge status: ${paymentIntent.status})`;
+                    }
+                 } else {
+                    paymentNote += " (No payment method found)";
+                 }
+             }
+           } catch (e: any) {
+             console.error("Failed to charge cancellation fee:", e.message);
+             paymentNote += ` (Charge failed: ${e.message})`;
+             paymentStatus = "failed";
+           }
+        } else {
+           paymentNote += " (No Stripe Customer ID)";
+        }
 
         await db.payment.create({
           data: {
             bookingId: booking.id,
             amount: feeToCharge,
-            status: "pending",
-            description: `Cancellation Fee - ${input.cancellationReason || "No reason provided"}`,
-            isCaptured: false,
+            status: paymentStatus,
+            description: paymentNote,
+            isCaptured: isCaptured,
+            stripePaymentIntentId: stripeIntentId,
           },
         });
         feeCharged = true;

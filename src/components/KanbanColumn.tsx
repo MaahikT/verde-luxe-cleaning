@@ -31,7 +31,8 @@ interface KanbanColumnProps {
   onDrop: (e: React.DragEvent, status: string) => void;
   isDraggingOver: boolean;
   onDelete: (leadId: number) => void;
-  onEdit: (lead: any) => void;
+  onEdit: (lead: Lead) => void;
+  onConvert: (lead: Lead) => void;
 }
 
 export function KanbanColumn({
@@ -47,6 +48,7 @@ export function KanbanColumn({
   isDraggingOver,
   onDelete,
   onEdit,
+  onConvert,
 }: KanbanColumnProps) {
   return (
     <div className="flex flex-col h-full flex-1 min-w-0">
@@ -90,6 +92,7 @@ export function KanbanColumn({
                 onDragEnd={onDragEnd}
                 onDelete={onDelete}
                 onEdit={onEdit}
+                onConvert={onConvert}
               />
             ))}
           </div>

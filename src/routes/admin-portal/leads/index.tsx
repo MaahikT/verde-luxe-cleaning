@@ -31,6 +31,7 @@ function LeadsPage() {
   const { token, user } = useAuthStore();
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  const [convertingLead, setConvertingLead] = useState<any | null>(null);
 
   // Redirect if not authenticated or not an admin/owner
   useEffect(() => {
@@ -57,22 +58,55 @@ function LeadsPage() {
     })
   );
 
+  const deleteLeadMutation = useMutation(
+    trpc.deleteLeadAdmin.mutationOptions({
+      onSuccess: () => {
+        toast.success("Lead deleted successfully!");
+        queryClient.invalidateQueries({ queryKey: trpc.getAllLeadsAdmin.queryKey() });
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to delete lead");
+      },
+    })
+  );
+
   const createBookingMutation = useMutation(
     trpc.createBookingAdmin.mutationOptions({
       onSuccess: (data) => {
-        if (data.generatedPassword) {
-          toast.success(
-            `Booking created! New client account created.\n\nTemporary Password: ${data.generatedPassword}\n\nPlease share this with the client. They can change it via "Forgot Password".`,
-            {
-              duration: 15000,
-              style: {
-                maxWidth: '500px',
-                whiteSpace: 'pre-line',
-              },
-            }
-          );
+        // If we are converting a lead, delete the lead now that booking is created
+        if (convertingLead) {
+          deleteLeadMutation.mutate({
+            authToken: token || "",
+            leadId: convertingLead.id,
+          });
+
+          if (data.generatedPassword) {
+            toast.success(
+              `Lead converted & Booking created!\n\nNew client account created.\nTemporary Password: ${data.generatedPassword}`,
+              {
+                duration: 15000,
+                style: { maxWidth: '500px', whiteSpace: 'pre-line' },
+              }
+            );
+          } else {
+             toast.success("Lead converted & Booking created!");
+          }
+           setConvertingLead(null);
         } else {
-          toast.success("Booking created successfully!");
+          if (data.generatedPassword) {
+            toast.success(
+              `Booking created! New client account created.\n\nTemporary Password: ${data.generatedPassword}\n\nPlease share this with the client. They can change it via "Forgot Password".`,
+              {
+                duration: 15000,
+                style: {
+                  maxWidth: '500px',
+                  whiteSpace: 'pre-line',
+                },
+              }
+            );
+          } else {
+            toast.success("Booking created successfully!");
+          }
         }
         setShowBookingForm(false);
         queryClient.invalidateQueries({ queryKey: trpc.getAllLeadsAdmin.queryKey() });
@@ -100,17 +134,7 @@ function LeadsPage() {
     })
   );
 
-  const deleteLeadMutation = useMutation(
-    trpc.deleteLeadAdmin.mutationOptions({
-      onSuccess: () => {
-        toast.success("Lead deleted successfully!");
-        queryClient.invalidateQueries({ queryKey: trpc.getAllLeadsAdmin.queryKey() });
-      },
-      onError: (error) => {
-        toast.error(error.message || "Failed to delete lead");
-      },
-    })
-  );
+
 
 
 
@@ -150,6 +174,11 @@ function LeadsPage() {
 
   const handleEditLead = (lead: any) => {
     setSelectedLead(lead);
+    setShowBookingForm(true);
+  };
+
+  const handleConvertToBooking = (lead: any) => {
+    setConvertingLead(lead);
     setShowBookingForm(true);
   };
 
@@ -384,10 +413,20 @@ function LeadsPage() {
                 </div>
               ) : searchParams.view === "kanban" ? (
                 <div className="bg-gray-100/50 rounded-xl shadow-sm border border-gray-200 p-4">
-                  <KanbanBoard leads={filteredLeads} onDeleteLead={handleDeleteLead} onEditLead={handleEditLead} />
+                  <KanbanBoard
+                    leads={filteredLeads}
+                    onDeleteLead={handleDeleteLead}
+                    onEditLead={handleEditLead}
+                    onConvertLead={handleConvertToBooking}
+                  />
                 </div>
               ) : (
-                <LeadTable leads={filteredLeads} onDelete={handleDeleteLead} onEdit={handleEditLead} />
+                <LeadTable
+                  leads={filteredLeads}
+                  onDelete={handleDeleteLead}
+                  onEdit={handleEditLead}
+                  onConvert={handleConvertToBooking}
+                />
               )}
             </>
           )}
@@ -404,18 +443,22 @@ function LeadsPage() {
           onCancel={() => {
             setShowBookingForm(false);
             setSelectedLead(null);
+            setConvertingLead(null);
           }}
           isSubmitting={createBookingMutation.isPending || createLeadMutation.isPending || updateLeadMutation.isPending}
-          mode="lead"
+          mode={selectedLead ? "lead" : "booking"}
           booking={
-            selectedLead
+            selectedLead || convertingLead
               ? (() => {
                   try {
+                    // Provide defaults from lead data
+                    const sourceLead = selectedLead || convertingLead;
+
                     // Start with basic lead info
                     const baseInfo = {
-                      id: selectedLead.id,
-                      clientId: selectedLead.userId || 0,
-                      cleanerId: null, // Leads don't have cleaners assigned yet usually
+                      id: selectedLead ? selectedLead.id : 0, // 0 ID for new booking from conversion
+                      clientId: sourceLead.userId || 0,
+                      cleanerId: null,
                       address: "",
                       serviceType: "",
                       scheduledDate: "",
@@ -433,15 +476,15 @@ function LeadsPage() {
                       paymentMethod: "NEW_CREDIT_CARD",
                       paymentDetails: null,
                       selectedExtras: null,
-                      clientEmail: selectedLead.email,
-                      clientFirstName: selectedLead.firstName,
-                      clientLastName: selectedLead.lastName,
-                      clientPhone: selectedLead.phone,
+                      clientEmail: sourceLead.email,
+                      clientFirstName: sourceLead.firstName,
+                      clientLastName: sourceLead.lastName,
+                      clientPhone: sourceLead.phone,
                     };
 
                     // Try to parse booking details from message
                     // Format is "Special Instructions: ...\n\nBooking Details:\n{...}"
-                    const message = selectedLead.message || "";
+                    const message = sourceLead.message || "";
                     const jsonMatch = message.match(/Booking Details:\n(\{[\s\S]*\})/);
 
                     if (jsonMatch && jsonMatch[1]) {
